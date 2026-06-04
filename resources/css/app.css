@@ -1,0 +1,109 @@
+@import 'tailwindcss';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@theme {
+    --font-sans:
+        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+}
+
+@keyframes toast-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes popover-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes fade-enter {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes notification-pop {
+    0% {
+        transform: scale(0.86);
+    }
+    60% {
+        transform: scale(1.08);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.toast-enter {
+    animation: toast-enter 180ms ease-out both;
+}
+
+.popover-enter {
+    animation: popover-enter 160ms ease-out both;
+    transform-origin: top right;
+}
+
+.fade-enter {
+    animation: fade-enter 160ms ease-out both;
+}
+
+.notification-badge {
+    animation: notification-pop 220ms ease-out both;
+}
+
+button:not(:disabled),
+a[href] {
+    transition-property: color, background-color, border-color, opacity, box-shadow, transform;
+    transition-duration: 180ms;
+    transition-timing-function: ease-out;
+}
+
+button:not(:disabled):active,
+a[href]:active {
+    transform: scale(0.98);
+}
+
+input,
+select,
+textarea {
+    transition-property: border-color, box-shadow, background-color;
+    transition-duration: 160ms;
+    transition-timing-function: ease-out;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgb(14 165 233 / 0.16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}

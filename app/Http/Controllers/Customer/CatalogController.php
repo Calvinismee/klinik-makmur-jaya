@@ -24,6 +24,12 @@ class CatalogController extends Controller
             ? $query->paginate(12)->withQueryString()
             : $this->fuzzyPaginate($request, $query->get(), $search);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'medicines' => $medicines,
+            ]);
+        }
+
         $categories = Category::all();
 
         return Inertia::render('Customer/Catalog/Index', [

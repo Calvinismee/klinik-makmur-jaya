@@ -26,7 +26,7 @@ export default function CatalogShow({ medicine }: { medicine: any }) {
                         {medicine.image ? (
                             <img src={`/storage/${medicine.image}`} alt={medicine.name} className="max-w-full max-h-[400px] object-contain rounded" />
                         ) : (
-                            <div className="text-gray-400 text-lg">Tidak Ada Gambar Available</div>
+                            <div className="text-gray-400 text-lg">Tidak Ada Gambar</div>
                         )}
                     </div>
                     <div className="md:w-1/2 p-8">
@@ -85,7 +85,7 @@ export default function CatalogShow({ medicine }: { medicine: any }) {
                                     value={quantity}
                                     onKeyDown={preventNonNumericKey}
                                     onChange={(e) => setQuantity(parseInt(digitsOnly(e.target.value)) || 1)}
-                                    className="w-24 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="w-24 p-5 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 />
                             </div>
                             <button 

@@ -40,10 +40,10 @@ export default function CheckoutIndex({ cart, subtotal, hasPrescriptionItems }: 
 
                         <form onSubmit={submit} className="space-y-6">
                             <div className="rounded border border-blue-100 bg-blue-50 p-4">
-                                <h3 className="font-bold text-blue-800">Pembayaran Online Midtrans</h3>
+                                <h3 className="font-bold text-blue-800">Pembayaran</h3>
                                 <p className="mt-1 text-sm text-blue-700">
                                     {hasPrescriptionItems
-                                        ? 'Setelah resep disetujui apoteker, Anda dapat membayar melalui Midtrans dari halaman detail pesanan.'
+                                        ? 'Setelah resep disetujui apoteker, Anda dapat membayar melalui dari halaman detail pesanan.'
                                         : 'Setelah pesanan dibuat, Anda akan diarahkan ke halaman pembayaran Midtrans.'}
                                 </p>
                             </div>
@@ -52,7 +52,7 @@ export default function CheckoutIndex({ cart, subtotal, hasPrescriptionItems }: 
                                 <div className="bg-yellow-50 border border-yellow-200 p-4 rounded">
                                     <h3 className="font-bold text-yellow-800 mb-2">Resep Dibutuhkan</h3>
                                     <p className="text-sm text-yellow-700 mb-4">
-                                        Anda menambahkan obat yang membutuhkan resep dokter. Silakan unggah foto atau pindaian resep Anda yang jelas.
+                                        Silakan unggah foto atau pindaian resep Anda yang jelas.
                                     </p>
                                     <input 
                                         type="file" 
@@ -68,7 +68,7 @@ export default function CheckoutIndex({ cart, subtotal, hasPrescriptionItems }: 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Catatan Tambahan (Opsional)</label>
                                 <textarea 
-                                    className="w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" 
+                                    className="w-full p-5 rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" 
                                     rows={3}
                                     value={data.notes}
                                     onChange={e => setData('notes', e.target.value)}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
 
 type MedicineSuggestion = {
@@ -14,20 +14,54 @@ type MedicineSuggestion = {
 export default function CatalogIndex({ medicines, categories, filters }: { medicines: any, categories: any[], filters: any }) {
     const [search, setSearch] = useState(filters.search || '');
     const [categoryId, setCategoryId] = useState(filters.category_id || '');
+    const [catalogMedicines, setCatalogMedicines] = useState(medicines);
     const [suggestions, setSuggestions] = useState<MedicineSuggestion[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
+    const [isLoadingCatalog, setIsLoadingCatalog] = useState(false);
+
+    const loadCatalog = async (nextSearch: string, nextCategoryId: string) => {
+        setIsLoadingCatalog(true);
+
+        try {
+            const params = new URLSearchParams();
+
+            if (nextSearch) {
+                params.set('search', nextSearch);
+            }
+
+            if (nextCategoryId) {
+                params.set('category_id', nextCategoryId);
+            }
+
+            const response = await fetch(`/customer/catalog?${params.toString()}`, {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Gagal memuat katalog');
+            }
+
+            const page = await response.json();
+            setCatalogMedicines(page.medicines);
+        } finally {
+            setIsLoadingCatalog(false);
+        }
+    };
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         setShowSuggestions(false);
-        router.get('/customer/catalog', { search, category_id: categoryId }, { preserveState: true });
+        loadCatalog(search, categoryId);
     };
 
     const selectSuggestion = (suggestion: MedicineSuggestion) => {
         setSearch(suggestion.name);
         setShowSuggestions(false);
-        router.get('/customer/catalog', { search: suggestion.name, category_id: categoryId }, { preserveState: true });
+        loadCatalog(suggestion.name, categoryId);
     };
 
     useEffect(() => {
@@ -71,7 +105,7 @@ export default function CatalogIndex({ medicines, categories, filters }: { medic
     }, [search, categoryId]);
 
     return (
-        <AppLayout title="Obat Catalog">
+        <AppLayout title="Katalog Obat">
             <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
                 <form onSubmit={handleSearch} className="flex gap-4 flex-wrap">
                     <div className="relative flex-1 min-w-[220px]">
@@ -121,19 +155,22 @@ export default function CatalogIndex({ medicines, categories, filters }: { medic
                         className="rounded-md border p-2"
                         value={categoryId}
                         onChange={e => {
-                            setCategoryId(e.target.value);
-                            router.get('/customer/catalog', { search, category_id: e.target.value }, { preserveState: true });
+                            const nextCategoryId = e.target.value;
+                            setCategoryId(nextCategoryId);
+                            loadCatalog(search, nextCategoryId);
                         }}
                     >
                         <option value="">Semua Kategori</option>
                         {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
-                    <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md">Search</button>
+                    <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md" disabled={isLoadingCatalog}>
+                        {isLoadingCatalog ? 'Memuat...' : 'Search'}
+                    </button>
                 </form>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {medicines.data.map((med: any) => (
+                {catalogMedicines.data.map((med: any) => (
                     <div key={med.id} className="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col">
                         <div className="h-48 bg-gray-100 flex items-center justify-center">
                             {med.image ? (
@@ -167,7 +204,7 @@ export default function CatalogIndex({ medicines, categories, filters }: { medic
                 ))}
             </div>
 
-            {medicines.data.length === 0 && (
+            {catalogMedicines.data.length === 0 && (
                 <div className="text-center py-12 text-gray-500 bg-white rounded-lg">
                     Tidak ada obat yang ditemukan.
                 </div>

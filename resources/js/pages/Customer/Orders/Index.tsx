@@ -31,14 +31,14 @@ export default function OrdersIndex({ orders }: { orders: any[] }) {
     };
 
     return (
-        <AppLayout title="My Orders">
+        <AppLayout title="Pesanan Saya">
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <h1 className="text-2xl font-bold mb-6 border-b pb-4">My Orders</h1>
+                <h1 className="text-2xl font-bold mb-6 border-b pb-4">Pesanan Saya</h1>
 
                 {orders.length === 0 ? (
                     <div className="text-center py-12 text-gray-500">
-                        You have not placed any orders yet. <br/>
-                        <Link href="/customer/catalog" className="text-blue-600 hover:underline mt-2 inline-block">Browse Catalog</Link>
+                        Belum ada pesanan<br/>
+                        <Link href="/customer/catalog" className="text-blue-600 hover:underline mt-2 inline-block">Lihat Katalog</Link>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">

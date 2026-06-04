@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
+import { digitsOnly, preventNonNumericKey } from '../../../utils/numericInput';
 
 export default function SuppliersIndex({ suppliers }: { suppliers: any[] }) {
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -60,7 +61,7 @@ export default function SuppliersIndex({ suppliers }: { suppliers: any[] }) {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Telepon</label>
-                        <input type="text" className="mt-1 block w-full rounded-md border p-2" value={data.phone} onChange={e => setData('phone', e.target.value)} />
+                        <input type="text" inputMode="numeric" className="mt-1 block w-full rounded-md border p-2" value={data.phone} onKeyDown={preventNonNumericKey} onChange={e => setData('phone', digitsOnly(e.target.value))} />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Alamat</label>

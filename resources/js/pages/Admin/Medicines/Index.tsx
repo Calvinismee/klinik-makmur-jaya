@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useForm, router } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
+import { decimalOnly, digitsOnly, preventNonNumericKey } from '../../../utils/numericInput';
 
 export default function MedicinesIndex({ medicines, categories, suppliers }: { medicines: any[], categories: any[], suppliers: any[] }) {
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -121,11 +122,11 @@ export default function MedicinesIndex({ medicines, categories, suppliers }: { m
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Harga</label>
-                        <input type="number" step="0.01" className="mt-1 block w-full rounded-md border p-2" value={data.price} onChange={e => setData('price', e.target.value)} required />
+                        <input type="text" inputMode="decimal" className="mt-1 block w-full rounded-md border p-2" value={data.price} onKeyDown={e => preventNonNumericKey(e, true)} onChange={e => setData('price', decimalOnly(e.target.value))} required />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Min. Stok</label>
-                        <input type="number" className="mt-1 block w-full rounded-md border p-2" value={data.minimum_stock} onChange={e => setData('minimum_stock', e.target.value)} required />
+                        <input type="text" inputMode="numeric" className="mt-1 block w-full rounded-md border p-2" value={data.minimum_stock} onKeyDown={preventNonNumericKey} onChange={e => setData('minimum_stock', digitsOnly(e.target.value))} required />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Gambar</label>

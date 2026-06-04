@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
+import { decimalOnly, digitsOnly, preventNonNumericKey } from '../../../utils/numericInput';
 
 export default function BatchesIndex({ batches, medicines }: { batches: any[], medicines: any[] }) {
     const { data, setData, post, processing, reset, errors } = useForm({
@@ -38,7 +39,7 @@ export default function BatchesIndex({ batches, medicines }: { batches: any[], m
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Quantity</label>
-                        <input type="number" min="1" className="mt-1 block w-full rounded-md border p-2" value={data.quantity} onChange={e => setData('quantity', e.target.value)} required />
+                        <input type="text" inputMode="numeric" className="mt-1 block w-full rounded-md border p-2" value={data.quantity} onKeyDown={preventNonNumericKey} onChange={e => setData('quantity', digitsOnly(e.target.value))} required />
                         {errors.quantity && <div className="text-red-500 text-sm">{errors.quantity}</div>}
                     </div>
                     <div>
@@ -48,7 +49,7 @@ export default function BatchesIndex({ batches, medicines }: { batches: any[], m
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Purchase Harga (optional)</label>
-                        <input type="number" step="0.01" className="mt-1 block w-full rounded-md border p-2" value={data.purchase_price} onChange={e => setData('purchase_price', e.target.value)} />
+                        <input type="text" inputMode="decimal" className="mt-1 block w-full rounded-md border p-2" value={data.purchase_price} onKeyDown={e => preventNonNumericKey(e, true)} onChange={e => setData('purchase_price', decimalOnly(e.target.value))} />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Received At</label>

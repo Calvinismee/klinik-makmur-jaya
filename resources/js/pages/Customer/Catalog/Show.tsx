@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
+import { digitsOnly, preventNonNumericKey } from '../../../utils/numericInput';
 
 export default function CatalogShow({ medicine }: { medicine: any }) {
     const [quantity, setQuantity] = useState(1);
@@ -79,10 +80,11 @@ export default function CatalogShow({ medicine }: { medicine: any }) {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
                                 <input 
-                                    type="number" 
-                                    min="1" 
-                                    value={quantity} 
-                                    onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} 
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={quantity}
+                                    onKeyDown={preventNonNumericKey}
+                                    onChange={(e) => setQuantity(parseInt(digitsOnly(e.target.value)) || 1)}
                                     className="w-24 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 />
                             </div>

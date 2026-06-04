@@ -1,27 +1,122 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
+
+type MedicineSuggestion = {
+    id: number;
+    name: string;
+    code: string;
+    category?: string | null;
+    price: number;
+    stock: number;
+};
 
 export default function CatalogIndex({ medicines, categories, filters }: { medicines: any, categories: any[], filters: any }) {
     const [search, setSearch] = useState(filters.search || '');
     const [categoryId, setCategoryId] = useState(filters.category_id || '');
+    const [suggestions, setSuggestions] = useState<MedicineSuggestion[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
+        setShowSuggestions(false);
         router.get('/customer/catalog', { search, category_id: categoryId }, { preserveState: true });
     };
+
+    const selectSuggestion = (suggestion: MedicineSuggestion) => {
+        setSearch(suggestion.name);
+        setShowSuggestions(false);
+        router.get('/customer/catalog', { search: suggestion.name, category_id: categoryId }, { preserveState: true });
+    };
+
+    useEffect(() => {
+        const keyword = search.trim();
+
+        if (keyword.length < 2) {
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => {
+            setIsSearching(true);
+
+            const params = new URLSearchParams({
+                search: keyword,
+                category_id: categoryId,
+            });
+
+            fetch(`/customer/catalog/autocomplete?${params.toString()}`, {
+                signal: controller.signal,
+            })
+                .then((response) => response.json())
+                .then((data: MedicineSuggestion[]) => {
+                    setSuggestions(data);
+                    setShowSuggestions(data.length > 0);
+                })
+                .catch((error) => {
+                    if (error.name !== 'AbortError') {
+                        setSuggestions([]);
+                    }
+                })
+                .finally(() => setIsSearching(false));
+        }, 250);
+
+        return () => {
+            controller.abort();
+            window.clearTimeout(timer);
+        };
+    }, [search, categoryId]);
 
     return (
         <AppLayout title="Obat Catalog">
             <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
                 <form onSubmit={handleSearch} className="flex gap-4 flex-wrap">
-                    <input 
-                        type="text" 
-                        placeholder="Cari obat..." 
-                        className="flex-1 min-w-[200px] rounded-md border p-2"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                    />
+                    <div className="relative flex-1 min-w-[220px]">
+                        <input
+                            type="text"
+                            placeholder="Cari obat..."
+                            className="w-full rounded-md border p-2"
+                            value={search}
+                            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                            onBlur={() => window.setTimeout(() => setShowSuggestions(false), 150)}
+                            onChange={e => {
+                                setSearch(e.target.value);
+                                setShowSuggestions(true);
+                            }}
+                        />
+                        {showSuggestions && (
+                            <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-80 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                                {suggestions.map((suggestion) => (
+                                    <button
+                                        key={suggestion.id}
+                                        type="button"
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        onClick={() => selectSuggestion(suggestion)}
+                                        className="block w-full border-b border-gray-100 px-3 py-2 text-left transition last:border-b-0 hover:bg-blue-50"
+                                    >
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <div className="truncate text-sm font-semibold text-gray-900">{suggestion.name}</div>
+                                                <div className="truncate text-xs text-gray-500">{suggestion.code} {suggestion.category ? `- ${suggestion.category}` : ''}</div>
+                                            </div>
+                                            <div className="shrink-0 text-right">
+                                                <div className="text-xs font-bold text-blue-600">Rp {Number(suggestion.price).toLocaleString('id-ID')}</div>
+                                                <div className="text-[11px] text-gray-500">Stok {suggestion.stock}</div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {isSearching && (
+                            <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                                mencari
+                            </div>
+                        )}
+                    </div>
                     <select 
                         className="rounded-md border p-2"
                         value={categoryId}

@@ -1,4 +1,4 @@
-import { useForm, Head } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 interface ToastState {
@@ -126,6 +126,13 @@ export default function Login() {
                             {processing ? 'Memproses...' : 'Masuk'}
                         </button>
                     </form>
+
+                    <div className="mt-6 text-center text-sm text-slate-500">
+                        Belum punya akun?{' '}
+                        <Link href="/register" className="font-semibold text-cyan-600 hover:text-cyan-700">
+                            Daftar pelanggan
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>

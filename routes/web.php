@@ -15,8 +15,11 @@ Route::get('/', function () {
 })->name('home');
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\MidtransWebhookController;
 use App\Http\Controllers\NotificationController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 
 Route::post('payments/midtrans/notification', [MidtransWebhookController::class, 'handle'])
     ->name('payments.midtrans.notification');
@@ -24,7 +27,34 @@ Route::post('payments/midtrans/notification', [MidtransWebhookController::class,
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store']);
+    Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
+    Route::post('register', [RegisteredUserController::class, 'store']);
 });
+
+Route::get('email/verify', function () {
+    if (auth()->user()->hasVerifiedEmail()) {
+        return redirect()->route('home');
+    }
+
+    return Inertia::render('Auth/VerifyEmail');
+})->middleware('auth')->name('verification.notice');
+
+Route::get('email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+
+    return redirect()->route('home')
+        ->with('success', 'Email berhasil diverifikasi.');
+})->middleware(['auth', 'signed', 'throttle:6,1'])->name('verification.verify');
+
+Route::post('email/verification-notification', function (Request $request) {
+    if ($request->user()->hasVerifiedEmail()) {
+        return redirect()->route('home');
+    }
+
+    $request->user()->sendEmailVerificationNotification();
+
+    return back()->with('success', 'Link verifikasi baru sudah dikirim ke email Anda.');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 Route::post('logout', [LoginController::class, 'destroy'])->name('logout')->middleware('auth');
 Route::post('notifications/read-all', [NotificationController::class, 'readAll'])
@@ -131,7 +161,7 @@ use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CheckoutController;
 use App\Http\Controllers\Customer\OrderController;
 
-Route::middleware(['auth', 'role:pasien'])->prefix('customer')->name('customer.')->group(function () {
+Route::middleware(['auth', 'verified', 'role:pasien'])->prefix('customer')->name('customer.')->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
         $orders = \App\Models\Order::where('user_id', $user->id)->get();
@@ -151,6 +181,7 @@ Route::middleware(['auth', 'role:pasien'])->prefix('customer')->name('customer.'
     })->name('dashboard');
 
     Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog.index');
+    Route::get('/catalog/autocomplete', [CatalogController::class, 'autocomplete'])->name('catalog.autocomplete');
     Route::get('/catalog/{medicine}', [CatalogController::class, 'show'])->name('catalog.show');
 
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');

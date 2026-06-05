@@ -1,4 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 
 type VerifyEmailPageProps = {
     auth: {
@@ -8,6 +9,7 @@ type VerifyEmailPageProps = {
     };
     flash?: {
         success?: string;
+        error?: string;
     };
     [key: string]: unknown;
 };
@@ -19,6 +21,13 @@ export default function VerifyEmail() {
     const resend = () => {
         post('/email/verification-notification');
     };
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({ preserveState: true });
+        }, 3000);
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -43,6 +52,12 @@ export default function VerifyEmail() {
                         </div>
                     )}
 
+                    {props.flash?.error && (
+                        <div className="mb-5 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+                            {props.flash.error}
+                        </div>
+                    )}
+
                     <div className="space-y-3">
                         <button
                             type="button"
@@ -61,14 +76,6 @@ export default function VerifyEmail() {
                         >
                             Keluar
                         </Link>
-
-                        <button
-                            type="button"
-                            onClick={() => router.reload()}
-                            className="w-full rounded-lg px-3 py-2 text-sm font-medium text-cyan-700 transition hover:bg-cyan-50"
-                        >
-                            Saya Sudah Verifikasi
-                        </button>
                     </div>
                 </div>
             </div>

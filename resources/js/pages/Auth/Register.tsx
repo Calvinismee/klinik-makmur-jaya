@@ -35,6 +35,9 @@ export default function Register() {
     const passwordIsStrong = passwordRules.every((rule) => rule.passed);
     const confirmationStarted = data.password_confirmation.length > 0;
     const confirmationMatches = data.password === data.password_confirmation;
+    const nikStarted = data.identity_number.length > 0;
+    const nikIs16 = data.identity_number.length === 16;
+    
     const passwordInputClass = passwordStarted
         ? passwordIsStrong
             ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
@@ -45,7 +48,12 @@ export default function Register() {
             ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
             : 'border-red-300 focus:border-red-500 focus:ring-red-500'
         : 'border-gray-300 focus:border-cyan-500 focus:ring-cyan-500';
-    const canSubmit = !processing && passwordIsStrong && confirmationStarted && confirmationMatches;
+    const nikInputClass = nikStarted
+        ? nikIs16
+            ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
+            : 'border-red-300 focus:border-red-500 focus:ring-red-500'
+        : 'border-gray-300 focus:border-cyan-500 focus:ring-cyan-500';
+    const canSubmit = !processing && passwordIsStrong && confirmationStarted && confirmationMatches && nikIs16;
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -108,11 +116,16 @@ export default function Register() {
                                     type="text"
                                     inputMode="numeric"
                                     maxLength={16}
-                                    className="block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
+                                    className={`block w-full rounded-lg border px-3.5 py-2.5 text-sm shadow-sm ${nikInputClass}`}
                                     value={data.identity_number}
                                     onKeyDown={preventNonNumericKey}
                                     onChange={(e) => setData('identity_number', digitsOnly(e.target.value).slice(0, 16))}
                                 />
+                                {nikStarted && (
+                                    <div className={`mt-1 text-xs ${nikIs16 ? 'text-green-600' : 'text-red-500'}`}>
+                                        {nikIs16 ? 'NIK sudah 16 digit.' : `NIK harus 16 digit (kurang ${16 - data.identity_number.length} digit).`}
+                                    </div>
+                                )}
                                 {errors.identity_number && <div className="mt-1 text-xs text-red-500">{errors.identity_number}</div>}
                             </div>
 

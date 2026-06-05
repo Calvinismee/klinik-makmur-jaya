@@ -39,6 +39,13 @@ return Application::configure(basePath: dirname(__DIR__))
             AuditLogService::logException($exception);
         });
 
+        $exceptions->render(function (\Illuminate\Routing\Exceptions\InvalidSignatureException $e, Request $request) {
+            if ($request->routeIs('verification.verify')) {
+                return redirect()->route('verification.notice')
+                    ->with('error', 'Link verifikasi email sudah kedaluwarsa. Silakan minta ulang email verifikasi.');
+            }
+        });
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );

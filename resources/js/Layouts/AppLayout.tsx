@@ -23,6 +23,14 @@ interface ToastState {
     message: string;
 }
 
+interface BroadcastNotificationPayload {
+    notification?: {
+        title?: string;
+        message?: string;
+        severity?: string;
+    };
+}
+
 // SVG Icon components
 const Icons = {
     dashboard: (
@@ -386,6 +394,44 @@ export default function AppLayout({ title, children }: Props) {
 
         return () => window.clearTimeout(timer);
     }, [noticeMessage, noticeType]);
+
+    useEffect(() => {
+        if (!auth?.user) {
+            return;
+        }
+
+        if (!window.Echo) {
+            return;
+        }
+
+        const channelName = `user-notifications.${auth.user.id}`;
+        const channel = window.Echo.private(channelName);
+
+        channel.listen('.notification.created', (event: BroadcastNotificationPayload) => {
+            const notification = event.notification ?? {};
+            const severity = notification.severity === 'critical'
+                ? 'error'
+                : notification.severity === 'warning'
+                    ? 'info'
+                    : 'success';
+
+            setToast({
+                id: Date.now(),
+                type: severity,
+                message: notification.message || notification.title || 'Notifikasi baru diterima.',
+            });
+
+            router.reload({
+                only: ['notifications', 'navNotifications'],
+                preserveScroll: true,
+                preserveState: true,
+            });
+        });
+
+        return () => {
+            window.Echo.leave(channelName);
+        };
+    }, [auth?.user?.id]);
 
     useEffect(() => {
         if (!auth?.user) {

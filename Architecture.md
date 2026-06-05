@@ -2,585 +2,243 @@
 
 ## Project Overview
 
-Project name: **Klinik Makmur Jaya – Web-Based Medicine E-Commerce System**
+Project name: **Klinik Makmur Jaya - Web-Based Medicine E-Commerce System**
 
-This project is a web application for managing medicine sales at Klinik Makmur Jaya. The application supports online medicine purchasing, offline cashier transactions, medicine stock management, prescription verification, sales reports, notifications, audit logging, and error monitoring.
+This project is a Laravel monolith with React pages rendered through Inertia.js. It supports medicine catalog browsing, customer checkout, prescription upload and verification, offline cashier/POS transactions, stock and batch management, Midtrans payment handling, admin reporting, notifications, audit logs, and error logs.
 
-The project is built using a fixed stack:
+This document reflects the implementation currently present in the repository as of **2026-06-05**. Items marked as partial or planned should not be treated as completed features.
 
-- **Backend:** Laravel
-- **Frontend:** React
-- **Bridge:** Inertia.js
-- **Database:** MySQL
-- **Authentication and Authorization:** Laravel authentication, middleware, and Spatie Laravel Permission
-- **Queue:** Laravel database queue
-- **Realtime:** Laravel Reverb / Laravel Broadcasting
-- **PDF Export:** DomPDF
-- **Excel/CSV Import:** Maatwebsite Excel
-- **Charts:** Chart.js or React chart wrapper
-- **File Storage:** Laravel Storage
+## Current Stack
 
-The system is a prototype for certification/project demonstration, not a full production clinic system.
-
----
-
-## Main Goals
-
-The application must provide:
-
-1. Multi-role authentication for Admin, Apoteker, Kasir, and Pasien/Pelanggan.
-2. Medicine catalog with search, filter, product detail, image preview, and stock visibility.
-3. Online purchasing flow using cart, checkout, Midtrans payment gateway integration, and prescription upload.
-4. Offline cashier transaction flow (POS) integrated with the same stock system.
-5. Medicine stock management using FIFO logic based on medicine batch expiration date.
-6. Prescription verification by Apoteker for medicines that require a prescription.
-7. Dashboard for sales, stock, revenue, critical stock, expiring medicine, and order monitoring.
-8. Notifications for order status, critical stock, expiring medicine, and application errors.
-9. Reports with SQL-based summaries, background PDF/Excel exports, and import capabilities.
-10. Audit log and error log for system traceability.
-11. Queue/background job implementation for import, report generation, stock update, and Midtrans webhook notifications.
-
----
-
-## User Roles
-
-The application only uses these four main actors.
-
-| Role | Main Access |
+| Area | Current Implementation |
 |---|---|
-| Admin | Manage users, roles, medicines, categories, suppliers, customers, reports, audit logs, error logs, and system configuration. |
-| Apoteker | Manage medicine stock, medicine batches, prescription verification, order processing, critical stock notifications, and expiring medicines. |
-| Kasir | Process offline sales transactions, view stock availability, print transaction summary, and update offline payment status. |
-| Pasien/Pelanggan | Register, login, view catalog, search medicine, manage cart, checkout, upload prescription, and monitor order status. |
+| Backend | Laravel `^13.7`, PHP `^8.3` |
+| Frontend | React `^19.2`, TypeScript, Inertia.js `^3.0` |
+| Styling | Tailwind CSS `^4` |
+| Auth/RBAC | Laravel session auth, email verification, Spatie Laravel Permission |
+| Database | Local `.env` uses MySQL; `.env.example` defaults to SQLite |
+| Session/Cache/Queue | Database-backed session, cache, and queue |
+| Payments | Midtrans service + webhook endpoint |
+| PDF | `barryvdh/laravel-dompdf` |
+| Excel/CSV | `maatwebsite/excel` |
+| Notifications | Laravel database/mail notification classes plus backend broadcast event |
+| Realtime | Laravel Reverb + Laravel Echo on private notification channels, with polling fallback |
 
----
+## Implementation Status
+
+### Implemented
+
+- Multi-role authentication for `admin`, `apoteker`, `kasir`, and `pasien`.
+- Customer registration, login, logout, email verification, and session keep-alive route.
+- Role-based route groups using Spatie role middleware.
+- Admin dashboard, master data pages, order list/export, audit log, and error log pages.
+- Medicine, category, supplier, and user management.
+- Customer dashboard, catalog, catalog autocomplete, cart, checkout, order list, order detail, and pay action.
+- Prescription upload during checkout when prescription-only medicines are present.
+- Apoteker dashboard, batch entry, stock movement view, prescription queue, prescription history, prescription verification, and order readiness flow.
+- Cashier dashboard, POS cart flow, POS checkout, and online payment monitoring page.
+- FIFO stock deduction through `StockService` using `medicine_batches.remaining_quantity` ordered by `expired_at`.
+- Online order creation through `CheckoutService`.
+- Offline POS order creation and immediate stock deduction through `CheckoutService::processOfflineCheckout`.
+- Midtrans payment service, webhook controller, and background webhook processing job.
+- Report export controllers and jobs for PDF/Excel generation.
+- Medicine import job.
+- Critical stock and expiring medicine check jobs.
+- Audit logging middleware/service and error logging through exception reporting.
+- Laravel database notifications and notification classes for order, stock, expiry, job status, and application error events.
+
+### Partially Implemented
+
+- **Dashboard realtime behavior:** notification badges are refreshed by Reverb events and polling fallback, while most dashboard metrics are still refreshed through normal Inertia reload/navigation.
+- **Reports:** order export/report background jobs exist, but the broader report catalog is implemented around order/sales reporting rather than every report type originally proposed.
+- **Validation layer:** controllers and services validate important flows, but there are no dedicated Form Request classes in the current repo.
+
+### Not Currently Implemented
+
+- Separate `api.php` route file for application features.
+- Dedicated `customers`, `prescriptions`, `payments`, `offline_sales`, `offline_sale_items`, `medicine_images`, or `system_configs` tables.
+- Separate `PrescriptionService`, `ReportService`, or `ErrorLogService` classes.
+- Chart.js integration.
 
 ## High-Level Architecture
-
-Use a Laravel monolith with React pages through Inertia.js.
 
 ```text
 Browser
   |
-  | HTTP request
+  | HTTP / Inertia request
   v
-Laravel Routes
+Laravel web routes
   |
   v
-Controller Layer
+Middleware
+  |-- auth
+  |-- verified
+  |-- role middleware
+  |-- CSRF protection
+  |-- security headers
+  |-- audit activity middleware
+  v
+Controllers
   |
-  |-- Form Request Validation
-  |-- Authorization / Middleware
-  |-- Service Classes
-  |-- Eloquent Models
+  |-- services
+  |-- models
+  |-- jobs
+  |-- notifications
+  v
+Database / Storage / Queue / Mail / Broadcast log
   |
   v
-Database / Storage / Queue / Broadcasting
+Inertia response
   |
   v
-Inertia Response
-  |
-  v
-React Pages and Components
+React + TypeScript pages
 ```
 
-### Architecture Rules
+## Backend Structure
 
-- Laravel is the source of truth for routing, validation, authorization, business logic, database operations, and queue jobs.
-- React is responsible for UI rendering, forms, tables, modals, charts, and user interactions.
-- Inertia.js is used to connect Laravel routes to React pages without creating a separate REST API for every page.
-- Use API routes only when needed for asynchronous actions, autocomplete, realtime polling fallback, or external-style endpoints.
-- Keep business logic out of React components. Put it in Laravel services, actions, jobs, policies, and models.
-
----
-
-## Recommended Folder Structure
-
-### Laravel Backend
+Current backend structure:
 
 ```text
 app/
-├── Actions/
-│   ├── Orders/
-│   ├── Stock/
-│   ├── Reports/
-│   └── Prescriptions/
-├── Enums/
 ├── Events/
-├── Exceptions/
+│   └── NotificationCreated.php
+├── Exports/
+│   └── OrdersExport.php
 ├── Http/
 │   ├── Controllers/
 │   │   ├── Admin/
 │   │   ├── Apoteker/
+│   │   ├── Auth/
 │   │   ├── Cashier/
 │   │   ├── Customer/
-│   │   └── Auth/
-│   ├── Middleware/
-│   ├── Requests/
-│   └── Resources/
+│   │   ├── MidtransWebhookController.php
+│   │   └── NotificationController.php
+│   └── Middleware/
+├── Imports/
+│   └── MedicinesImport.php
 ├── Jobs/
-├── Listeners/
 ├── Models/
 ├── Notifications/
-├── Policies/
-├── Services/
-│   ├── CartService.php
-│   ├── CheckoutService.php
-│   ├── StockService.php
-│   ├── PrescriptionService.php
-│   ├── ReportService.php
-│   └── AuditLogService.php
-└── Support/
+└── Services/
 ```
 
-### React Frontend
+Current services:
+
+```text
+AuditLogService
+CartService
+CheckoutService
+MidtransPaymentService
+NotificationDispatchService
+OrderService
+StockService
+```
+
+Current jobs:
+
+```text
+CheckCriticalStockJob
+CheckExpiringMedicineJob
+GenerateSalesReportExcelJob
+GenerateSalesReportPdfJob
+ImportMedicinesJob
+ProcessMidtransNotificationJob
+```
+
+## Frontend Structure
+
+Current frontend structure:
 
 ```text
 resources/js/
-├── Components/
-│   ├── Common/
-│   ├── Forms/
-│   ├── Tables/
-│   ├── Charts/
-│   ├── Layouts/
-│   └── Notifications/
-├── Pages/
+├── Layouts/
+│   └── AppLayout.tsx
+├── components/
+│   └── FileUploadField.tsx
+├── lib/
+├── pages/
 │   ├── Admin/
-│   ├── Pharmacist/
+│   ├── Auth/
 │   ├── Cashier/
 │   ├── Customer/
-│   ├── Auth/
-│   └── Dashboard/
-├── Hooks/
-├── Lib/
-├── Types/
-└── app.jsx
+│   ├── Pharmacist/
+│   └── welcome.tsx
+├── types/
+├── utils/
+└── app.tsx
 ```
 
-### Routes
-
-```text
-routes/
-├── web.php
-├── api.php
-├── auth.php
-└── channels.php
-```
-
-Use route groups by role:
+The UI uses TypeScript/React pages grouped by role. Laravel remains the source of truth for routing, access control, persistence, and business logic.
 
-```php
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Admin routes
-});
+## Routes
 
-Route::middleware(['auth', 'role:apoteker'])->prefix('pharmacist')->name('pharmacist.')->group(function () {
-    // Apoteker routes
-});
-
-Route::middleware(['auth', 'role:kasir'])->prefix('kasir')->name('kasir.')->group(function () {
-    // Kasir routes
-});
-
-Route::middleware(['auth', 'role:pasien'])->prefix('customer')->name('customer.')->group(function () {
-    // Customer routes
-});
-```
+All application routes are currently defined in `routes/web.php`, with broadcast channel authorization in `routes/channels.php`.
 
----
+### Public and Auth Routes
 
-## Core Modules
-
-### 1. Authentication and Authorization
+- `/` redirects authenticated users to the appropriate role dashboard and guests to login.
+- `/login`, `/register`, `/logout`
+- `/email/verify`, `/email/verify/{id}/{hash}`, `/email/verification-notification`
+- `/session/keep-alive`
+- `/notifications/read-all`
+- `/payments/midtrans/notification` for Midtrans webhook notifications.
 
-Required features:
+### Admin Routes
 
-- Login
-- Logout
-- Customer registration
-- Email verification if implemented
-- Password hashing using Laravel default hashing
-- Role-based middleware
-- Permission-based access using Spatie Laravel Permission
-- Session timeout
-- Audit logging for important user actions
+Prefix: `/admin`
 
-Main roles:
+- Dashboard
+- Category CRUD
+- Supplier CRUD
+- Medicine CRUD and import
+- User CRUD
+- Order list
+- Order export/download/status endpoints
+- Audit log page
+- Error log page
 
-- `admin`
-- `apoteker`
-- `kasir`
-- `pasien`
+### Apoteker Routes
 
-Recommended permissions:
+Prefix: `/pharmacist`
 
-```text
-manage-users
-manage-roles
-manage-medicines
-manage-categories
-manage-suppliers
-manage-customers
-manage-stock
-verify-prescriptions
-process-online-orders
-process-offline-sales
-view-reports
-export-reports
-view-audit-logs
-view-error-logs
-manage-system-config
-```
+- Dashboard
+- Batch index/store
+- Stock movement index
+- Order index
+- Bulk ready and mark ready actions
+- Prescription queue, verification, and history
 
----
+### Cashier Routes
 
-### 2. Medicine Catalog
+Prefix: `/cashier`
 
-Used by Pasien/Pelanggan.
+- Dashboard
+- POS index/add/update/clear/checkout
+- Payment monitoring page
 
-Features:
+### Customer Routes
 
-- List medicines
-- Search by name/code
-- Filter by category
-- Sort by price/name/stock
-- View medicine detail
-- Show image preview
-- Show stock availability
-- Show whether prescription is required
+Prefix: `/customer`
 
-Frontend pages:
+- Dashboard
+- Catalog index/autocomplete/show
+- Cart index/add/update/remove
+- Checkout index/store
+- Orders index/show/pay
 
-```text
-resources/js/Pages/Customer/Catalog/Index.jsx
-resources/js/Pages/Customer/Catalog/Show.jsx
-```
+## Database Tables
 
-Backend controllers:
-
-```text
-app/Http/Controllers/Customer/CatalogController.php
-```
-
----
-
-### 3. Cart and Checkout
-
-Used by Pasien/Pelanggan.
-
-Features:
-
-- Add medicine to cart
-- Update quantity
-- Remove item
-- Calculate subtotal and total
-- Validate stock before checkout
-- Require prescription upload if cart contains prescription-only medicine
-- Create order
-- Integrate with Midtrans payment gateway
-- Send notification to customer and apoteker
-
-Important rule:
-
-- Cart validation must happen again during checkout. Do not rely only on frontend validation.
-
-Recommended service:
-
-```text
-app/Services/CartService.php
-app/Services/CheckoutService.php
-```
-
----
-
-### 4. Prescription Verification
-
-Used by Apoteker.
-
-Features:
-
-- View orders requiring prescription verification
-- View uploaded prescription file
-- Approve prescription
-- Reject prescription with reason
-- Continue order processing if approved
-- Notify customer about verification result
-
-Prescription status:
-
-```text
-pending
-approved
-rejected
-```
-
-Order status related to prescription:
-
-```text
-waiting_prescription_verification
-prescription_rejected
-processing
-```
-
----
-
-### 5. Stock and Batch Management
-
-Used by Admin and Apoteker.
-
-Main concept:
-
-- Medicine stock is stored per batch.
-- Each batch has quantity and expiration date.
-- Stock deduction must use FIFO by earliest expiration date.
-
-Important tables:
-
-- `medicines`
-- `medicine_batches`
-- `stock_movements`
-
-FIFO logic:
-
-1. Get medicine batches with available quantity.
-2. Sort by earliest expiration date.
-3. Deduct from the earliest batch first.
-4. Continue to the next batch until requested quantity is fulfilled.
-5. Create stock movement records for traceability.
-6. Run inside database transaction.
-
-Recommended service:
-
-```text
-app/Services/StockService.php
-```
-
-Important rule:
-
-- Any stock deduction must use `StockService`.
-- Do not deduct stock directly inside controllers.
-
----
-
-### 6. Offline Cashier Transaction
-
-Used by Kasir.
-
-Features:
-
-- Search medicine by name or code
-- Add medicine to offline transaction
-- Validate stock
-- Calculate total
-- Complete direct payment
-- Deduct stock using FIFO
-- Create sales transaction
-- Update dashboard data
-
-Frontend pages:
-
-```text
-resources/js/Pages/Cashier/Pos/Index.jsx
-resources/js/Pages/Cashier/Dashboard.jsx
-```
-
-Backend controllers:
-
-```text
-app/Http/Controllers/Cashier/PosController.php
-```
-
----
-
-### 7. Order Management
-
-Used by Admin and Apoteker.
-
-Order statuses:
-
-```text
-waiting_payment
-waiting_prescription_verification
-paid
-processing
-ready_to_pickup
-completed
-cancelled
-prescription_rejected
-```
-
-Payment statuses:
-
-```text
-unpaid
-paid
-failed
-refunded
-```
-
-Order rules:
-
-- Order is created after checkout.
-- If order contains prescription-only medicine, status becomes `waiting_prescription_verification`.
-- If no prescription is required, status becomes `waiting_payment` and processed via Midtrans, or `paid` for POS offline transactions.
-- Stock is deducted only when order is approved and ready to be processed.
-- All order status changes must be logged.
-
----
-
-### 8. Dashboard and Reports
-
-Used by Admin, Apoteker, and Kasir depending on role.
-
-Dashboard widgets:
-
-- Total daily sales
-- Total monthly sales
-- Total revenue
-- Critical stock count
-- Expiring medicine count
-- New online orders
-- Pending prescription verification
-- Recent transactions
-- Error summary
-
-Reports:
-
-- Sales report
-- Best-selling medicines
-- Expiring medicines
-- Stock movement report
-- Transaction recap
-
-Export:
-
-- PDF using DomPDF (includes background queue jobs)
-- Excel/CSV import/export using Maatwebsite Excel (includes background queue jobs)
-
-Recommended service:
-
-```text
-app/Services/ReportService.php
-```
-
----
-
-### 9. Notifications and Alerts
-
-Notification types:
-
-- Critical stock alert
-- Expiring medicine alert
-- New order notification
-- Prescription verification result
-- Order status update
-- Application error notification
-
-Notification channels:
-
-- Database notification
-- Email notification if configured
-- Realtime broadcast if implemented
-
-Use Laravel notifications:
-
-```text
-app/Notifications/
-```
-
-Use Laravel events for realtime updates:
-
-```text
-app/Events/
-```
-
----
-
-### 10. Queue and Background Jobs
-
-Use Laravel database queue.
-
-Queue jobs:
-
-- Import medicine CSV/Excel
-- Generate large sales report
-- Send notifications
-- Process Midtrans webhook notifications
-- Update stock after order processing
-- Check expiring medicine
-- Check critical stock
-
-Important rule:
-
-- Long-running processes must not run directly inside HTTP request if they can block the UI.
-
-Commands:
-
-```bash
-php artisan queue:work
-```
-
----
-
-### 11. Audit Log and Error Log
-
-Audit log records user activity.
-
-Recommended audit fields:
-
-```text
-id
-user_id
-action
-module
-description
-ip_address
-user_agent
-created_at
-```
-
-Examples:
-
-- User logged in
-- Admin created medicine
-- Apoteker approved prescription
-- Kasir completed offline transaction
-- Stock deducted
-- Report exported
-
-Error log records application errors.
-
-Recommended error fields:
-
-```text
-id
-severity
-message
-file
-line
-trace_summary
-user_id
-url
-method
-created_at
-```
-
-Severity:
-
-```text
-info
-warning
-critical
-```
-
----
-
-## Suggested Database Tables
-
-Use these table names consistently.
+Tables currently represented by migrations:
 
 ```text
 users
+password_reset_tokens
+sessions
+cache
+cache_locks
+jobs
+job_batches
+failed_jobs
 roles
 permissions
 model_has_roles
@@ -589,205 +247,314 @@ role_has_permissions
 categories
 suppliers
 medicines
-medicine_images
 medicine_batches
 stock_movements
-customers
-prescriptions
 orders
 order_items
-payments
-offline_sales
-offline_sale_items
-notifications
 audit_logs
 error_logs
-system_configs
-jobs
-failed_jobs
+notifications
+report_jobs
 ```
 
-### Key Table Notes
+The system currently stores both online orders and POS orders in the `orders` table. POS orders use an order number prefix such as `POS-`; online orders use `ORD-`.
 
-#### users
+## Core Domain Modules
 
-Stores all authenticated users, including admin, apoteker, kasir, and pasien.
+### Authentication and Authorization
 
-#### medicines
+- Laravel session authentication is used.
+- Customers can register.
+- Email verification is required for customer routes.
+- Roles are handled with Spatie Laravel Permission.
+- Route middleware restricts each role area.
+- Important user activity is captured by `AuditUserActivity` and `AuditLogService`.
 
-Stores medicine master data.
-
-Important fields:
+Main roles:
 
 ```text
-id
-category_id
-supplier_id
-code
-name
-description
-composition
-dosage
-side_effects
-price
-minimum_stock
-requires_prescription
-is_active
-created_at
-updated_at
+admin
+apoteker
+kasir
+pasien
 ```
 
-#### medicine_batches
+### Medicine Catalog
 
-Stores stock per batch.
-
-Important fields:
+Customer catalog functionality is implemented through:
 
 ```text
-id
-medicine_id
-batch_number
-quantity
-remaining_quantity
-expired_at
-purchase_price
-received_at
-created_at
-updated_at
+app/Http/Controllers/Customer/CatalogController.php
+resources/js/pages/Customer/Catalog/Index.tsx
+resources/js/pages/Customer/Catalog/Show.tsx
 ```
 
-#### stock_movements
+Supported behavior includes listing, search/autocomplete, filtering/sorting through controller data, medicine detail, stock visibility, and prescription requirement visibility.
 
-Stores every stock in/out movement.
+### Cart and Checkout
 
-Important fields:
+Implemented through:
 
 ```text
-id
-medicine_id
-medicine_batch_id
-movement_type
-quantity
-reference_type
-reference_id
-notes
-created_by
-created_at
+app/Services/CartService.php
+app/Services/CheckoutService.php
+app/Http/Controllers/Customer/CartController.php
+app/Http/Controllers/Customer/CheckoutController.php
 ```
 
-#### orders
+Checkout validates cart contents, verifies stock using `StockService`, requires prescription image for prescription-only medicines, creates `orders` and `order_items`, clears the cart, and notifies Apoteker when prescription verification is needed.
 
-Stores online customer orders.
+### Prescription Verification
 
-Important fields:
+Implemented through:
 
 ```text
-id
-user_id
-order_number
-total_amount
-order_status
-payment_status
-prescription_status
-notes
-created_at
-updated_at
+app/Http/Controllers/Apoteker/PrescriptionController.php
+app/Services/OrderService.php
+resources/js/pages/Pharmacist/Prescriptions/Index.tsx
+resources/js/pages/Pharmacist/Prescriptions/History.tsx
 ```
 
-#### order_items
+Apoteker can approve or reject prescriptions. Approval moves the order toward payment; rejection sets `prescription_rejected` and stores the rejection reason in order notes.
 
-Stores order details.
+### Stock and Batch Management
 
-Important fields:
+Implemented through:
 
 ```text
-id
-order_id
-medicine_id
-quantity
-price
-subtotal
-created_at
-updated_at
+app/Services/StockService.php
+app/Http/Controllers/Apoteker/MedicineBatchController.php
+app/Http/Controllers/Apoteker/StockMovementController.php
 ```
 
----
+Stock is tracked per batch in `medicine_batches`. Stock deduction uses FIFO by `expired_at`, locks matching batch rows, prevents negative stock, and writes `stock_movements` records.
+
+### Offline Cashier/POS
+
+Implemented through:
+
+```text
+app/Http/Controllers/Cashier/PosController.php
+app/Services/CheckoutService.php
+resources/js/pages/Cashier/POS/Index.tsx
+```
+
+POS checkout creates a paid and completed `orders` record with a `POS-` order number, creates order items, and deducts stock immediately.
+
+### Online Order and Payment Flow
+
+Implemented through:
+
+```text
+app/Services/OrderService.php
+app/Services/MidtransPaymentService.php
+app/Http/Controllers/Customer/OrderController.php
+app/Http/Controllers/MidtransWebhookController.php
+app/Jobs/ProcessMidtransNotificationJob.php
+```
+
+Online orders use Midtrans fields on the `orders` table. Webhook processing validates the Midtrans order number and gross amount, updates payment status, deducts stock on new paid notifications, and moves paid orders to processing.
+
+### Admin Reporting and Export
+
+Implemented through:
+
+```text
+app/Http/Controllers/Admin/ReportController.php
+app/Http/Controllers/Admin/OrderController.php
+app/Exports/OrdersExport.php
+app/Jobs/GenerateSalesReportExcelJob.php
+app/Jobs/GenerateSalesReportPdfJob.php
+app/Models/ReportJob.php
+```
+
+Admin can view dashboard metrics, export order data, generate PDF/Excel reports in the background, poll report job status, and download generated reports.
+
+### Notifications and Alerts
+
+Notification classes exist under `app/Notifications/` for:
+
+- Application errors.
+- Critical stock.
+- Expiring batches.
+- New prescription orders.
+- New processing orders.
+- Order status updates.
+- System job status.
+
+`NotificationDispatchService` deduplicates database notifications by `dedupe_key` and emits the `NotificationCreated` backend event when `toDatabase` is available.
+
+### Audit and Error Logging
+
+Audit logging is implemented through:
+
+```text
+app/Services/AuditLogService.php
+app/Http/Middleware/AuditUserActivity.php
+app/Models/AuditLog.php
+```
+
+Error logging is implemented through:
+
+```text
+app/Models/ErrorLog.php
+app/Notifications/AppErrorNotification.php
+bootstrap/app.php exception reporting hook
+```
+
+Important exceptions are captured by the application exception configuration and can be surfaced to Admin through logs/notifications.
+
+## Status Values
+
+Order statuses currently used in services/controllers include:
+
+```text
+waiting_prescription_verification
+waiting_payment
+paid
+processing
+ready_to_pickup
+completed
+cancelled
+prescription_rejected
+```
+
+Payment statuses currently used include:
+
+```text
+unpaid
+pending
+paid
+failed
+```
+
+Prescription statuses currently used include:
+
+```text
+pending
+approved
+rejected
+```
 
 ## Business Rules
 
 ### Stock Rules
 
-- Stock must be calculated from `medicine_batches.remaining_quantity`.
-- Stock deduction must use FIFO based on `expired_at` ascending.
-- Stock cannot become negative.
-- Stock deduction must be wrapped inside database transaction.
-- Every stock change must create a `stock_movements` record.
-- Critical stock alert is triggered when total stock is below `medicines.minimum_stock`.
+- Stock is calculated from `medicine_batches.remaining_quantity`.
+- Stock deduction must go through `StockService`.
+- FIFO uses the earliest `expired_at` batch first.
+- Stock deduction is wrapped in a database transaction.
+- Matching batch rows are locked during deduction.
+- Stock cannot be deducted beyond available quantity.
+- Every stock deduction creates `stock_movements` rows.
+- Critical stock checks are dispatched after stock changes.
 
 ### Prescription Rules
 
-- Medicine with `requires_prescription = true` requires prescription upload during checkout.
-- Prescription must be verified by Apoteker.
-- Rejected prescription stops order processing.
-- Approved prescription allows order to continue.
-
-### Order Rules
-
-- Customer can only access their own orders.
-- Apoteker can process online orders.
-- Admin can view all orders and reports.
-- Status changes must be recorded in audit log.
+- Medicines marked as requiring prescription need a prescription image during checkout.
+- Orders containing prescription-only medicines start as `waiting_prescription_verification`.
+- Apoteker approval changes the order to `waiting_payment`.
+- Apoteker rejection changes the order to `prescription_rejected` and stores the reason in notes.
 
 ### Payment Rules
 
-- Terintegrasi dengan payment gateway Midtrans untuk pesanan online.
-- Sistem menggunakan webhook notification untuk menerima update status dari Midtrans (`/payments/midtrans/notification`).
-- Pembayaran offline menggunakan Point of Sales (POS) oleh kasir dengan status pembayaran instan.
-- Payment status must be stored separately from order status.
+- Online orders are configured for Midtrans.
+- Midtrans webhook endpoint: `/payments/midtrans/notification`.
+- Webhook processing validates order number and gross amount.
+- Paid online orders deduct stock and move to `processing`.
+- Failed/expired/cancelled Midtrans notifications mark unpaid orders as failed/cancelled.
+- POS orders are paid immediately and completed in the same transaction.
 
 ### Security Rules
 
-- Use Laravel validation for all inputs.
-- Use CSRF protection for web forms.
-- Use authorization checks in controllers or policies.
-- Never trust role checks from frontend only.
-- Use Eloquent or query builder parameter binding to prevent SQL injection.
-- Escape rendered user content in React.
-- Uploaded files must be validated by type and size.
+- Web routes use CSRF protection except the Midtrans webhook endpoint.
+- Role access is enforced on Laravel routes.
+- Customer routes require authenticated and verified users.
+- File upload flows should validate type and size before storing.
+- Frontend checks are only user experience helpers; server-side checks remain required.
 
----
+## Realtime Status
 
-## Page Structure
+Current realtime-related implementation:
 
-### Admin Pages
+```text
+app/Events/NotificationCreated.php
+routes/channels.php
+bootstrap/app.php ->withBroadcasting(...)
+config/broadcasting.php reverb connection
+config/reverb.php
+resources/js/echo.ts
+resources/js/Layouts/AppLayout.tsx private channel subscription
+composer dev runs php artisan reverb:start
+```
+
+Current private channel:
+
+```text
+user-notifications.{userId}
+```
+
+Current event alias:
+
+```text
+notification.created
+```
+
+Reverb is implemented for application notifications:
+
+- `laravel/reverb` is installed through Composer.
+- `config/broadcasting.php` defines the `reverb` broadcast connection.
+- Local `.env` and `.env.example` use `BROADCAST_CONNECTION=reverb`.
+- `package.json` includes `laravel-echo` and `pusher-js`.
+- `resources/js/app.tsx` imports `resources/js/echo.ts`.
+- `AppLayout` subscribes to `user-notifications.{userId}` through Echo's private channel API.
+- Incoming `notification.created` events trigger a toast and refresh the shared `notifications` and `navNotifications` Inertia props.
+
+Polling remains active as a fallback so notifications still update if the WebSocket server is unavailable.
+
+## Queue and Background Jobs
+
+The project uses the database queue. Local `.env` sets:
+
+```text
+QUEUE_CONNECTION=database
+```
+
+Queue command:
+
+```bash
+php artisan queue:work
+```
+
+Current background jobs cover import, report generation, stock checks, expiring batch checks, and Midtrans webhook processing.
+
+## Current Page Map
+
+### Admin
 
 ```text
 /admin/dashboard
-/admin/users
-/admin/roles
-/admin/medicines
 /admin/categories
 /admin/suppliers
-/admin/customers
+/admin/medicines
+/admin/users
 /admin/orders
-/admin/reports
 /admin/audit-logs
 /admin/error-logs
-/admin/settings
 ```
 
-### Apoteker Pages
+### Apoteker
 
 ```text
 /pharmacist/dashboard
-/pharmacist/movements
 /pharmacist/batches
-/pharmacist/prescriptions
+/pharmacist/movements
 /pharmacist/orders
+/pharmacist/prescriptions
 /pharmacist/prescription-history
 ```
 
-### Kasir Pages
+### Cashier
 
 ```text
 /cashier/dashboard
@@ -795,316 +562,85 @@ updated_at
 /cashier/payments
 ```
 
-### Customer Pages
+### Customer
 
 ```text
-/
-/catalog
-/catalog/{medicine}
-/cart
-/checkout
-/orders
-/orders/{order}
-/profile
+/customer/dashboard
+/customer/catalog
+/customer/catalog/{medicine}
+/customer/cart
+/customer/checkout
+/customer/orders
+/customer/orders/{order_number}
 ```
-
----
-
-## Controller Guidelines
-
-Controllers should be thin.
-
-Controller responsibilities:
-
-- Receive request
-- Call Form Request validation
-- Check authorization
-- Call service/action
-- Return Inertia response or redirect
-
-Controllers should not contain:
-
-- FIFO stock logic
-- Complex SQL report logic
-- Import processing logic
-- Notification orchestration
-- Long-running tasks
-
-Put these in services, actions, or jobs.
-
----
-
-## Service Guidelines
-
-Use service classes for business logic.
-
-Recommended services:
-
-```text
-CartService
-CheckoutService
-StockService
-PrescriptionService
-OrderService
-ReportService
-NotificationService
-AuditLogService
-ErrorLogService
-```
-
-Example service method names:
-
-```php
-StockService::getAvailableStock($medicineId)
-StockService::deductUsingFifo($medicineId, $quantity, $reference)
-CheckoutService::checkout(User $user, array $payload)
-PrescriptionService::approve(Prescription $prescription, User $apoteker)
-ReportService::getSalesSummary(array $filters)
-AuditLogService::record(User $user, string $action, string $module, string $description)
-```
-
----
-
-## React Guidelines
-
-React components should be UI-focused.
-
-Rules:
-
-- Use Inertia forms for page-level form submissions.
-- Keep reusable components in `resources/js/Components`.
-- Keep pages grouped by role.
-- Avoid placing business rules only in React.
-- Use frontend validation only for user experience; backend validation remains mandatory.
-- Use clear names for props and components.
-
-Recommended components:
-
-```text
-DataTable
-SearchInput
-FilterBar
-StatusBadge
-Modal
-ConfirmDialog
-MedicineCard
-MedicineForm
-OrderStatusBadge
-ChartCard
-NotificationDropdown
-FileUploadInput
-```
-
----
-
-## Validation Rules
-
-Use Form Request classes.
-
-Examples:
-
-```text
-StoreMedicineRequest
-UpdateMedicineRequest
-StoreCategoryRequest
-StoreSupplierRequest
-CheckoutRequest
-UploadPrescriptionRequest
-StoreOfflineSaleRequest
-ImportMedicineRequest
-UpdateOrderStatusRequest
-VerifyPrescriptionRequest
-```
-
-Validation must cover:
-
-- Required fields
-- Data type
-- Numeric range
-- File type and size
-- Unique medicine code
-- Existing foreign keys
-- Quantity must be positive
-- Stock availability during checkout/sale
-
----
-
-## Authorization Rules
-
-Use middleware, policies, and permissions.
-
-Layering:
-
-1. Route middleware checks authentication and role.
-2. Controller or policy checks permission/action.
-3. Service validates ownership or business constraint.
-
-Example:
-
-- Pasien can only view their own orders.
-- Apoteker can verify prescriptions.
-- Kasir can create offline sales.
-- Admin can access reports and logs.
-
----
-
-## Realtime Design
-
-Use Laravel Broadcasting with Reverb.
-
-Realtime events:
-
-```text
-OrderCreated
-OrderStatusUpdated
-StockCritical
-MedicineExpiringSoon
-ApplicationErrorOccurred
-```
-
-Fallback:
-
-- If realtime is not active in the demo environment, use polling from React every few seconds for dashboard widgets and notifications.
-
----
-
-## Import and Export Design
-
-### Import Medicine
-
-Use Maatwebsite Excel.
-
-Import flow:
-
-1. Admin uploads CSV/Excel file.
-2. Laravel validates file type and size.
-3. Import job is dispatched to queue.
-4. Each row is validated.
-5. Valid rows are inserted or updated.
-6. Invalid rows are logged.
-7. Admin receives import result notification.
-
-### Export Report
-
-Use DomPDF for PDF export.
-
-Export flow:
-
-1. Admin selects report filter.
-2. System queries report data.
-3. System renders PDF view.
-4. PDF is downloaded or stored.
-
----
-
-## Error Handling
-
-Use standard Laravel exception handling.
-
-Additional rule:
-
-- Important exceptions must be recorded in `error_logs`.
-- Critical errors must notify Admin.
-- User-facing messages must be clear but not expose stack trace.
-
-Example user-facing error:
-
-```text
-Stok obat tidak mencukupi untuk memproses transaksi.
-```
-
-Avoid exposing:
-
-```text
-SQLSTATE error, stack trace, file path, internal server config
-```
-
----
 
 ## Development Workflow
 
-Use Git.
+Useful local commands:
 
-Recommended branches:
-
-```text
-main
-develop
-feature/auth
-feature/catalog
-feature/cart-checkout
-feature/stock-fifo
-feature/cashier-sale
-feature/reports
-feature/notifications
-feature/import-export
+```bash
+composer install
+npm install
+php artisan migrate
+composer dev
+php artisan queue:work
+npm run build
+composer test
 ```
 
-Commit style:
-
-```text
-feat: add medicine catalog page
-fix: prevent negative stock on checkout
-refactor: move fifo logic to stock service
-docs: update architecture documentation
-```
-
----
+The `composer dev` script currently starts Laravel serve, queue listener, Reverb, Pail logs, and Vite.
 
 ## Testing Scope
 
-Minimum tests/manual checks:
+Minimum manual/regression checks for the current implementation:
 
-- Login by role
-- Admin medicine CRUD
-- Apoteker prescription verification
-- Customer cart and checkout
-- Kasir offline transaction
-- FIFO stock deduction
-- Critical stock alert
-- Expiring medicine alert
-- PDF report export
-- CSV/Excel import
-- Audit log creation
-- Error log recording
-
----
+- Login/logout by role.
+- Customer registration and email verification.
+- Admin medicine/category/supplier/user CRUD.
+- Medicine import.
+- Customer catalog search/detail.
+- Customer cart and checkout with and without prescription-only medicines.
+- Apoteker prescription approval/rejection.
+- Midtrans payment action and webhook handling.
+- Cashier POS checkout.
+- FIFO stock deduction and stock movement creation.
+- Critical stock and expiring medicine jobs.
+- Admin order export and background report generation.
+- Audit log creation.
+- Error log creation.
+- Notification creation and mark-all-read.
 
 ## AI Agent Instructions
 
 When modifying or generating code for this project, follow these rules:
 
 1. Use Laravel + React + Inertia architecture.
-2. Do not replace the chosen stack with another framework.
-3. Do not suggest alternative tools unless explicitly asked.
-4. Keep role names consistent: `admin`, `apoteker`, `kasir`, `pasien`.
-5. Keep actor names consistent: Admin, Apoteker, Kasir, Pasien/Pelanggan.
-6. Put business logic in Laravel services/actions/jobs, not in React components.
-7. Use Form Request classes for validation.
-8. Use middleware/policies/permissions for access control.
-9. Use `StockService` for all stock calculations and FIFO deductions.
-10. Use database transactions for checkout, offline sales, prescription approval that affects order status, and stock updates.
-11. Do not allow stock to become negative.
-12. Record important actions in audit log.
-13. Record important exceptions in error log.
-14. Use queue jobs for import, report generation, notifications, and long-running tasks.
-15. Use Laravel Storage for uploaded files.
-16. Validate uploaded prescription and medicine image files.
-17. Use clear Indonesian labels in the UI because this project is for Klinik Makmur Jaya.
-18. Use English for code identifiers unless the existing codebase already uses Indonesian identifiers.
-19. Keep database table names in English and snake_case.
-20. Keep code simple enough for project demonstration and certification assessment.
-
----
+2. Keep role names consistent: `admin`, `apoteker`, `kasir`, `pasien`.
+3. Keep actor names consistent: Admin, Apoteker, Kasir, Pasien/Pelanggan.
+4. Put business logic in Laravel services/jobs/models, not in React components.
+5. Prefer existing services before adding new abstractions.
+6. Use `StockService` for all stock calculations and FIFO deductions.
+7. Use database transactions for checkout, POS sales, payment completion, prescription verification, and stock updates.
+8. Do not allow stock to become negative.
+9. Record important actions in audit logs.
+10. Record important exceptions in error logs.
+11. Use queue jobs for import, report generation, Midtrans webhook work, and long-running tasks.
+12. Use Laravel Storage for uploaded files.
+13. Validate uploaded prescription and medicine files.
+14. Use clear Indonesian labels in the UI because this project is for Klinik Makmur Jaya.
+15. Use English for code identifiers unless the existing code already uses Indonesian identifiers.
+16. Keep database table names in English and snake_case.
+17. Keep Reverb documentation aligned with the actual backend config, Reverb server script, frontend Echo initialization, and UI subscriptions.
+18. Keep code simple enough for project demonstration and certification assessment.
 
 ## Out of Scope
 
 Do not implement these unless explicitly requested:
 
-- Native mobile application
-- Real courier integration
-- OCR prescription reading
-- Machine learning prescription validation
-- Full electronic medical record integration
-- Third-party professional security audit
-- Cloud-native microservices architecture
+- Native mobile application.
+- Real courier integration.
+- OCR prescription reading.
+- Machine learning prescription validation.
+- Full electronic medical record integration.
+- Third-party professional security audit.
+- Cloud-native microservices architecture.

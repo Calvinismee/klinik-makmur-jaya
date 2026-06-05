@@ -1,4 +1,6 @@
 import type { Auth } from '@/types/auth';
+import type Echo from 'laravel-echo';
+import type Pusher from 'pusher-js';
 
 declare module 'react' {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -15,5 +17,12 @@ declare module '@inertiajs/core' {
             sidebarOpen: boolean;
             [key: string]: unknown;
         };
+    }
+}
+
+declare global {
+    interface Window {
+        Echo: Echo;
+        Pusher: typeof Pusher;
     }
 }

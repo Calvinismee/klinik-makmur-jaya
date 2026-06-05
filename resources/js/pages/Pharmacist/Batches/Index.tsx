@@ -196,7 +196,8 @@ export default function BatchesIndex({
                                 !isExpired &&
                                 new Date(batch.expired_at) <
                                     new Date(
-                                        Date.now() + 30 * 24 * 60 * 60 * 1000,
+                                        new Date().getTime() +
+                                            30 * 24 * 60 * 60 * 1000,
                                     ); // 30 days
 
                             return (

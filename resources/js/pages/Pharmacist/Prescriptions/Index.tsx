@@ -1,5 +1,5 @@
+import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import { router, Link } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
 
 export default function PrescriptionsIndex({ orders }: { orders: any[] }) {
@@ -10,6 +10,7 @@ export default function PrescriptionsIndex({ orders }: { orders: any[] }) {
     const handleVerify = (orderId: number, status: 'approved' | 'rejected') => {
         if (status === 'rejected' && !reason.trim()) {
             setReasonError('Alasan penolakan wajib diisi.');
+
             return;
         }
 
@@ -134,6 +135,7 @@ export default function PrescriptionsIndex({ orders }: { orders: any[] }) {
                                                             setReason(
                                                                 e.target.value,
                                                             );
+
                                                             if (reasonError) {
                                                                 setReasonError(
                                                                     '',

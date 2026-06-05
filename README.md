@@ -37,7 +37,6 @@
             <td><img src="docs/screenshots/pharmacist-orders.png" alt="Placeholder Pesanan Apoteker" width="390"></td>
         </tr>
     </table>
-    <p><em>Screenshot masih berupa placeholder. Masukkan gambar aplikasi ke folder <code>docs/screenshots/</code> sesuai nama file di atas.</em></p>
 </div>
 
 ## Architecture Overview

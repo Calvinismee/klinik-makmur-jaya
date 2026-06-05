@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { Link } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import AppLayout from '../../../Layouts/AppLayout';
 
 type MedicineSuggestion = {
@@ -27,6 +27,8 @@ export default function CatalogIndex({
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
     const [isLoadingCatalog, setIsLoadingCatalog] = useState(false);
+    const canShowSuggestions =
+        search.trim().length >= 2 && showSuggestions && suggestions.length > 0;
 
     const loadCatalog = async (nextSearch: string, nextCategoryId: string) => {
         setIsLoadingCatalog(true);
@@ -79,8 +81,6 @@ export default function CatalogIndex({
         const keyword = search.trim();
 
         if (keyword.length < 2) {
-            setSuggestions([]);
-            setShowSuggestions(false);
             return;
         }
 
@@ -126,6 +126,7 @@ export default function CatalogIndex({
                             className="w-full rounded-md border p-2"
                             value={search}
                             onFocus={() =>
+                                search.trim().length >= 2 &&
                                 suggestions.length > 0 &&
                                 setShowSuggestions(true)
                             }
@@ -140,7 +141,7 @@ export default function CatalogIndex({
                                 setShowSuggestions(true);
                             }}
                         />
-                        {showSuggestions && (
+                        {canShowSuggestions && (
                             <div className="absolute top-full right-0 left-0 z-20 mt-1 max-h-80 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
                                 {suggestions.map((suggestion) => (
                                     <button

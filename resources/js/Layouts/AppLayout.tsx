@@ -1,5 +1,6 @@
-import { ReactNode, useEffect, useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 
 interface NavItem {
     label: string;
@@ -29,6 +30,13 @@ interface BroadcastNotificationPayload {
         message?: string;
         severity?: string;
     };
+}
+
+interface SidebarContentProps {
+    navSections: NavSection[];
+    isActive: (href: string) => boolean;
+    getNavBadgeCount: (href: string) => number;
+    onNavigate: () => void;
 }
 
 // SVG Icon components
@@ -579,10 +587,7 @@ function getNavSections(role: string): NavSection[] {
     }
 }
 
-function getBreadcrumbs(
-    pathname: string,
-    role: string,
-): { label: string; href?: string }[] {
+function getBreadcrumbs(pathname: string): { label: string; href?: string }[] {
     const map: Record<string, string> = {
         categories: 'Kategori',
         suppliers: 'Supplier',
@@ -621,6 +626,7 @@ function getBreadcrumbs(
     // Only show the page name (skip role prefix)
     for (let i = 1; i < segments.length; i++) {
         const label = map[segments[i]] || segments[i];
+
         if (i < segments.length - 1) {
             const href = '/' + segments.slice(0, i + 1).join('/');
             crumbs.push({ label, href });
@@ -630,6 +636,98 @@ function getBreadcrumbs(
     }
 
     return crumbs;
+}
+
+function SidebarContent({
+    navSections,
+    isActive,
+    getNavBadgeCount,
+    onNavigate,
+}: SidebarContentProps) {
+    return (
+        <>
+            <div className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-700/50 px-5">
+                <img
+                    src="/Logo.webp"
+                    alt="Logo Klinik Makmur Jaya"
+                    className="h-8 w-8 object-contain"
+                />
+                <div>
+                    <div className="text-sm leading-tight font-bold text-white">
+                        Klinik Makmur Jaya
+                    </div>
+                    <div className="text-[10px] leading-tight text-slate-400">
+                        Sistem E-Commerce Obat
+                    </div>
+                </div>
+            </div>
+
+            <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+                {navSections.map((section) => (
+                    <div key={section.title}>
+                        <div className="mb-2 px-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                            {section.title}
+                        </div>
+                        <div className="space-y-0.5">
+                            {section.items.map((item) => {
+                                const active = isActive(item.href);
+                                const badgeCount = getNavBadgeCount(item.href);
+
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        onClick={onNavigate}
+                                        className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ease-out hover:translate-x-0.5 active:scale-[0.98] ${
+                                            active
+                                                ? '-ml-px border-l-[3px] border-cyan-400 bg-gradient-to-r from-cyan-500/20 to-blue-500/10 text-cyan-400'
+                                                : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
+                                        }`}
+                                    >
+                                        <span
+                                            className={`transition-transform duration-200 group-hover:scale-110 ${active ? 'text-cyan-400' : 'text-slate-400'}`}
+                                        >
+                                            {item.icon}
+                                        </span>
+                                        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                                            <span className="truncate">
+                                                {item.label}
+                                            </span>
+                                            {badgeCount > 0 && (
+                                                <span
+                                                    className={`notification-badge inline-flex min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] leading-none font-bold ${
+                                                        active
+                                                            ? 'bg-cyan-400 text-slate-900'
+                                                            : 'bg-red-500 text-white'
+                                                    }`}
+                                                >
+                                                    {badgeCount > 99
+                                                        ? '99+'
+                                                        : badgeCount}
+                                                </span>
+                                            )}
+                                        </span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))}
+            </nav>
+
+            <div className="shrink-0 border-t border-slate-700/50 p-3">
+                <Link
+                    href="/logout"
+                    method="post"
+                    as="button"
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 active:scale-[0.98]"
+                >
+                    {Icons.logout}
+                    Logout
+                </Link>
+            </div>
+        </>
+    );
 }
 
 export default function AppLayout({ title, children }: Props) {
@@ -645,31 +743,48 @@ export default function AppLayout({ title, children }: Props) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [toast, setToast] = useState<ToastState | null>(null);
+    const [dismissedNoticeKey, setDismissedNoticeKey] = useState<string | null>(
+        null,
+    );
     const [sessionWarning, setSessionWarning] = useState(false);
 
-    const role = auth?.user?.roles?.[0]?.name || '';
+    const user = auth?.user;
+    const userId = user?.id;
+    const role = user?.roles?.[0]?.name || '';
     const navSections = getNavSections(role);
-    const breadcrumbs = getBreadcrumbs(currentPath, role);
+    const breadcrumbs = getBreadcrumbs(currentPath);
     const errorMessage =
         errors?.message ||
         Object.values(errors || {}).find(
             (message) => typeof message === 'string',
         );
     const noticeMessage = flash?.success || flash?.info || errorMessage;
+    const noticeKey = noticeMessage
+        ? `${flash?.success ? 'success' : flash?.info ? 'info' : 'error'}:${String(noticeMessage)}`
+        : null;
     const noticeType: ToastState['type'] = flash?.success
         ? 'success'
         : flash?.info
           ? 'info'
           : 'error';
+    const noticeToast: ToastState | null =
+        noticeMessage && noticeKey !== dismissedNoticeKey
+            ? {
+                  id: -1,
+                  type: noticeType,
+                  message: String(noticeMessage),
+              }
+            : null;
+    const activeToast = toast || noticeToast;
     const toastStyle =
-        toast?.type === 'success'
+        activeToast?.type === 'success'
             ? {
                   border: 'border-emerald-200',
                   icon: 'bg-emerald-50 text-emerald-600',
                   title: 'Berhasil',
                   iconElement: Icons.check,
               }
-            : toast?.type === 'info'
+            : activeToast?.type === 'info'
               ? {
                     border: 'border-cyan-200',
                     icon: 'bg-cyan-50 text-cyan-600',
@@ -719,29 +834,19 @@ export default function AppLayout({ title, children }: Props) {
     };
 
     useEffect(() => {
-        if (!noticeMessage) {
+        if (!noticeKey) {
             return;
         }
 
-        const nextToast: ToastState = {
-            id: Date.now(),
-            type: noticeType,
-            message: String(noticeMessage),
-        };
-
-        setToast(nextToast);
-
         const timer = window.setTimeout(() => {
-            setToast((current) =>
-                current?.id === nextToast.id ? null : current,
-            );
+            setDismissedNoticeKey(noticeKey);
         }, 4200);
 
         return () => window.clearTimeout(timer);
-    }, [noticeMessage, noticeType]);
+    }, [noticeKey]);
 
     useEffect(() => {
-        if (!auth?.user) {
+        if (!userId) {
             return;
         }
 
@@ -749,7 +854,7 @@ export default function AppLayout({ title, children }: Props) {
             return;
         }
 
-        const channelName = `user-notifications.${auth.user.id}`;
+        const channelName = `user-notifications.${userId}`;
         const channel = window.Echo.private(channelName);
 
         channel.listen(
@@ -783,10 +888,10 @@ export default function AppLayout({ title, children }: Props) {
         return () => {
             window.Echo.leave(channelName);
         };
-    }, [auth?.user?.id]);
+    }, [userId]);
 
     useEffect(() => {
-        if (!auth?.user) {
+        if (!userId) {
             return;
         }
 
@@ -800,10 +905,10 @@ export default function AppLayout({ title, children }: Props) {
         }, pollSeconds * 1000);
 
         return () => window.clearInterval(poll);
-    }, [auth?.user?.id, security?.notificationPollSeconds]);
+    }, [userId, security?.notificationPollSeconds]);
 
     useEffect(() => {
-        if (!auth?.user) {
+        if (!userId) {
             return;
         }
 
@@ -833,6 +938,7 @@ export default function AppLayout({ title, children }: Props) {
 
             if (remaining <= 0) {
                 router.post('/logout', {}, { preserveScroll: true });
+
                 return;
             }
 
@@ -846,103 +952,16 @@ export default function AppLayout({ title, children }: Props) {
             );
         };
     }, [
-        auth?.user?.id,
+        userId,
         security?.sessionLifetimeMinutes,
         security?.sessionWarningSeconds,
     ]);
-
-    const SidebarContent = () => (
-        <>
-            {/* Brand */}
-            <div className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-700/50 px-5">
-                <img
-                    src="/Logo.webp"
-                    alt="Logo Klinik Makmur Jaya"
-                    className="h-8 w-8 object-contain"
-                />
-                <div>
-                    <div className="text-sm leading-tight font-bold text-white">
-                        Klinik Makmur Jaya
-                    </div>
-                    <div className="text-[10px] leading-tight text-slate-400">
-                        Sistem E-Commerce Obat
-                    </div>
-                </div>
-            </div>
-
-            {/* Nav Sections */}
-            <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
-                {navSections.map((section) => (
-                    <div key={section.title}>
-                        <div className="mb-2 px-3 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                            {section.title}
-                        </div>
-                        <div className="space-y-0.5">
-                            {section.items.map((item) => {
-                                const active = isActive(item.href);
-                                const badgeCount = getNavBadgeCount(item.href);
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        onClick={() => setSidebarOpen(false)}
-                                        className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ease-out hover:translate-x-0.5 active:scale-[0.98] ${
-                                            active
-                                                ? '-ml-px border-l-[3px] border-cyan-400 bg-gradient-to-r from-cyan-500/20 to-blue-500/10 text-cyan-400'
-                                                : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
-                                        }`}
-                                    >
-                                        <span
-                                            className={`transition-transform duration-200 group-hover:scale-110 ${active ? 'text-cyan-400' : 'text-slate-400'}`}
-                                        >
-                                            {item.icon}
-                                        </span>
-                                        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-                                            <span className="truncate">
-                                                {item.label}
-                                            </span>
-                                            {badgeCount > 0 && (
-                                                <span
-                                                    className={`notification-badge inline-flex min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] leading-none font-bold ${
-                                                        active
-                                                            ? 'bg-cyan-400 text-slate-900'
-                                                            : 'bg-red-500 text-white'
-                                                    }`}
-                                                >
-                                                    {badgeCount > 99
-                                                        ? '99+'
-                                                        : badgeCount}
-                                                </span>
-                                            )}
-                                        </span>
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                    </div>
-                ))}
-            </nav>
-
-            {/* Logout at bottom */}
-            <div className="shrink-0 border-t border-slate-700/50 p-3">
-                <Link
-                    href="/logout"
-                    method="post"
-                    as="button"
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 active:scale-[0.98]"
-                >
-                    {Icons.logout}
-                    Logout
-                </Link>
-            </div>
-        </>
-    );
 
     return (
         <div className="min-h-screen bg-slate-50">
             <Head title={title} />
 
-            {toast && (
+            {activeToast && (
                 <div className="fixed top-4 right-4 z-[80] w-[calc(100%-2rem)] sm:top-6 sm:right-6 sm:w-96">
                     <div
                         role="status"
@@ -959,12 +978,18 @@ export default function AppLayout({ title, children }: Props) {
                                 {toastStyle.title}
                             </p>
                             <p className="mt-1 text-sm break-words text-slate-600">
-                                {toast.message}
+                                {activeToast.message}
                             </p>
                         </div>
                         <button
                             type="button"
-                            onClick={() => setToast(null)}
+                            onClick={() => {
+                                setToast(null);
+
+                                if (noticeKey) {
+                                    setDismissedNoticeKey(noticeKey);
+                                }
+                            }}
                             className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
                             aria-label="Tutup notifikasi"
                         >
@@ -1022,12 +1047,22 @@ export default function AppLayout({ title, children }: Props) {
                 >
                     {Icons.close}
                 </button>
-                <SidebarContent />
+                <SidebarContent
+                    navSections={navSections}
+                    isActive={isActive}
+                    getNavBadgeCount={getNavBadgeCount}
+                    onNavigate={() => setSidebarOpen(false)}
+                />
             </aside>
 
             {/* Sidebar - desktop (fixed) */}
             <aside className="hidden bg-slate-800 lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-                <SidebarContent />
+                <SidebarContent
+                    navSections={navSections}
+                    isActive={isActive}
+                    getNavBadgeCount={getNavBadgeCount}
+                    onNavigate={() => setSidebarOpen(false)}
+                />
             </aside>
 
             {/* Main content area */}

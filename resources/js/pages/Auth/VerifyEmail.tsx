@@ -26,6 +26,7 @@ export default function VerifyEmail() {
         const interval = setInterval(() => {
             router.reload({ preserveState: true });
         }, 3000);
+
         return () => clearInterval(interval);
     }, []);
 

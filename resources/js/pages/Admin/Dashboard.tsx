@@ -558,6 +558,7 @@ export default function AdminDashboard({
                             {expiringBatches.map((batch: any) => {
                                 const isExpired =
                                     new Date(batch.expired_at) < new Date();
+
                                 return (
                                     <tr
                                         key={batch.id}

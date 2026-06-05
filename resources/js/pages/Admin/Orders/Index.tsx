@@ -1,6 +1,6 @@
-import AppLayout from '../../../Layouts/AppLayout';
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import AppLayout from '../../../Layouts/AppLayout';
 
 export default function AdminOrdersIndex({
     orders,
@@ -9,7 +9,11 @@ export default function AdminOrdersIndex({
     orders: any[];
     reportJobs?: any[];
 }) {
-    const [jobs, setJobs] = useState<any[]>(reportJobs);
+    const [jobOverrides, setJobOverrides] = useState<Record<number, any>>({});
+    const jobs = useMemo(
+        () => reportJobs.map((job) => jobOverrides[job.id] ?? job),
+        [jobOverrides, reportJobs],
+    );
     const [showReportProgress, setShowReportProgress] = useState(() => {
         if (typeof window === 'undefined') {
             return true;
@@ -19,10 +23,6 @@ export default function AdminOrdersIndex({
             window.localStorage.getItem('admin-report-progress-hidden') !== '1'
         );
     });
-
-    useEffect(() => {
-        setJobs(reportJobs);
-    }, [reportJobs]);
 
     useEffect(() => {
         const activeJobs = jobs.filter((job) =>
@@ -42,26 +42,19 @@ export default function AdminOrdersIndex({
                 })
                     .then((response) => response.json())
                     .then((updatedJob) => {
-                        setJobs((currentJobs) =>
-                            currentJobs.map((currentJob) =>
-                                currentJob.id === updatedJob.id
-                                    ? updatedJob
-                                    : currentJob,
-                            ),
-                        );
+                        setJobOverrides((currentJobs) => ({
+                            ...currentJobs,
+                            [updatedJob.id]: updatedJob,
+                        }));
                     })
                     .catch(() => {
-                        setJobs((currentJobs) =>
-                            currentJobs.map((currentJob) =>
-                                currentJob.id === job.id
-                                    ? {
-                                          ...currentJob,
-                                          message:
-                                              'Gagal membaca progress terbaru.',
-                                      }
-                                    : currentJob,
-                            ),
-                        );
+                        setJobOverrides((currentJobs) => ({
+                            ...currentJobs,
+                            [job.id]: {
+                                ...job,
+                                message: 'Gagal membaca progress terbaru.',
+                            },
+                        }));
                     });
             });
         }, 2000);

@@ -1,5 +1,5 @@
-import AppLayout from '../../../Layouts/AppLayout';
 import { Link } from '@inertiajs/react';
+import AppLayout from '../../../Layouts/AppLayout';
 
 export default function ErrorLogsIndex({
     logs,

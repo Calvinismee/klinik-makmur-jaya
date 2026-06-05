@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLayout from '../../../Layouts/AppLayout';
 import { digitsOnly, preventNonNumericKey } from '../../../utils/numericInput';
 
@@ -23,6 +23,7 @@ export default function SuppliersIndex({ suppliers }: { suppliers: any[] }) {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+
         if (editingId) {
             put(`/admin/suppliers/${editingId}`, {
                 onSuccess: () => {

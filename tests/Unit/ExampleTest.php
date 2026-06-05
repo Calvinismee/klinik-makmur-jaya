@@ -1,5 +1,5 @@
 <?php
 
-test('that true is true', function () {
+test('pemeriksaan dasar pengujian unit berjalan', function () {
     expect(true)->toBeTrue();
 });

@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLayout from '../../../Layouts/AppLayout';
 
 export default function UsersIndex({
@@ -56,6 +56,7 @@ export default function UsersIndex({
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+
         if (editingId) {
             put(`/admin/users/${editingId}`, {
                 onSuccess: () => {

@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { router } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLayout from '../../../Layouts/AppLayout';
 
 export default function PosIndex({
@@ -20,6 +20,7 @@ export default function PosIndex({
     const cartQuantityByMedicine = cart.reduce<Record<number, number>>(
         (totals, item) => {
             totals[item.id] = Number(item.quantity || 0);
+
             return totals;
         },
         {},

@@ -1,5 +1,5 @@
+import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { useForm, router } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
 
 export default function CategoriesIndex({ categories }: { categories: any[] }) {
@@ -20,6 +20,7 @@ export default function CategoriesIndex({ categories }: { categories: any[] }) {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+
         if (editingId) {
             put(`/admin/categories/${editingId}`, {
                 onSuccess: () => {

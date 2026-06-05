@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { useForm, router } from '@inertiajs/react';
-import AppLayout from '../../../Layouts/AppLayout';
+import { useState } from 'react';
 import FileUploadField from '../../../components/FileUploadField';
+import AppLayout from '../../../Layouts/AppLayout';
 import {
     decimalOnly,
     digitsOnly,
@@ -48,6 +48,7 @@ export default function MedicinesIndex({
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+
         if (editingId) {
             setData('_method', 'put');
             post(`/admin/medicines/${editingId}`, {

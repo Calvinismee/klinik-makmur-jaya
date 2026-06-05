@@ -39,6 +39,7 @@ export default function Dashboard({
             completed: 'Selesai',
             cancelled: 'Dibatalkan',
         };
+
         return map[status] || status;
     };
 

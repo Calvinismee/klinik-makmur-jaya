@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
-import AppLayout from '../../../Layouts/AppLayout';
 import FileUploadField from '../../../components/FileUploadField';
+import AppLayout from '../../../Layouts/AppLayout';
 
 export default function CheckoutIndex({
     cart,

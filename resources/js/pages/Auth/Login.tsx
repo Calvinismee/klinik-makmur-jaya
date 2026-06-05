@@ -2,7 +2,6 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 interface ToastState {
-    id: number;
     message: string;
 }
 
@@ -12,7 +11,12 @@ export default function Login() {
         password: '',
         remember: false,
     });
-    const [toast, setToast] = useState<ToastState | null>(null);
+    const [dismissedToastMessage, setDismissedToastMessage] = useState<
+        string | null
+    >(null);
+    const message = errors.email || errors.password;
+    const toast: ToastState | null =
+        message && message !== dismissedToastMessage ? { message } : null;
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -20,27 +24,16 @@ export default function Login() {
     };
 
     useEffect(() => {
-        const message = errors.email || errors.password;
-
         if (!message) {
             return;
         }
 
-        const nextToast = {
-            id: Date.now(),
-            message,
-        };
-
-        setToast(nextToast);
-
         const timer = window.setTimeout(() => {
-            setToast((current) =>
-                current?.id === nextToast.id ? null : current,
-            );
+            setDismissedToastMessage(message);
         }, 4200);
 
         return () => window.clearTimeout(timer);
-    }, [errors.email, errors.password]);
+    }, [message]);
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -77,7 +70,11 @@ export default function Login() {
                         </div>
                         <button
                             type="button"
-                            onClick={() => setToast(null)}
+                            onClick={() => {
+                                if (message) {
+                                    setDismissedToastMessage(message);
+                                }
+                            }}
                             className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
                             aria-label="Tutup notifikasi"
                         >

@@ -6,6 +6,7 @@ use App\Models\MedicineBatch;
 use App\Models\Order;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Services\OrderService;
 use App\Services\StockService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Http\UploadedFile;
@@ -75,7 +76,28 @@ function medicineWithStock(array $overrides = [], array $batchOverrides = []): M
     return $medicine;
 }
 
-test('auth routes users to the correct role dashboard and protects admin pages', function () {
+function signedMidtransPayload(Order $order, array $overrides = []): array
+{
+    $payload = [
+        'order_id' => $order->order_number,
+        'status_code' => '200',
+        'gross_amount' => number_format((float) $order->total_amount, 2, '.', ''),
+        'transaction_status' => 'settlement',
+        'fraud_status' => 'accept',
+        'payment_type' => 'bank_transfer',
+        'transaction_id' => 'midtrans-transaction-id',
+        ...$overrides,
+    ];
+
+    $payload['signature_key'] = hash(
+        'sha512',
+        $payload['order_id'].$payload['status_code'].$payload['gross_amount'].config('services.midtrans.server_key')
+    );
+
+    return $payload;
+}
+
+test('autentikasi mengarahkan pengguna ke dashboard role yang sesuai dan melindungi halaman admin', function () {
     $admin = userWithRole('admin');
     $pasien = userWithRole('pasien');
 
@@ -92,7 +114,7 @@ test('auth routes users to the correct role dashboard and protects admin pages',
         ->assertForbidden();
 });
 
-test('customer registration creates a verified-pending pasien account', function () {
+test('registrasi pelanggan membuat akun pasien yang menunggu verifikasi email', function () {
     $this->post(route('register'), [
         'name' => 'Pasien Baru',
         'email' => 'pasien-baru@example.test',
@@ -111,7 +133,7 @@ test('customer registration creates a verified-pending pasien account', function
         ->and($user->email_verified_at)->toBeNull();
 });
 
-test('admin can create medicine master data', function () {
+test('admin dapat membuat master data obat', function () {
     $admin = userWithRole('admin');
     $category = Category::create(['name' => 'Antibiotik']);
     $supplier = Supplier::create(['name' => 'Supplier Admin']);
@@ -137,7 +159,7 @@ test('admin can create medicine master data', function () {
     ]);
 });
 
-test('catalog autocomplete only returns active matching medicines', function () {
+test('saran pencarian katalog hanya menampilkan obat aktif yang sesuai pencarian', function () {
     $pasien = userWithRole('pasien');
     medicineWithStock(['code' => 'PARA-001', 'name' => 'Paracetamol Anak']);
     medicineWithStock(['code' => 'PARA-OLD', 'name' => 'Paracetamol Nonaktif', 'is_active' => false]);
@@ -150,7 +172,7 @@ test('catalog autocomplete only returns active matching medicines', function () 
         ->assertJsonMissing(['code' => 'PARA-OLD']);
 });
 
-test('customer cart accepts available stock and rejects excessive quantity', function () {
+test('keranjang pelanggan menerima stok tersedia dan menolak jumlah melebihi stok', function () {
     $pasien = userWithRole('pasien');
     $medicine = medicineWithStock([], ['quantity' => 3]);
 
@@ -169,7 +191,43 @@ test('customer cart accepts available stock and rejects excessive quantity', fun
         ])->assertSessionHasErrors('message');
 });
 
-test('checkout creates prescription orders and notifies pharmacists', function () {
+test('checkout gagal ketika stok berubah setelah item masuk keranjang', function () {
+    Http::fake();
+
+    $pasien = userWithRole('pasien');
+    $medicine = medicineWithStock([], ['quantity' => 2]);
+
+    $this->actingAs($pasien)
+        ->post(route('customer.cart.add'), [
+            'medicine_id' => $medicine->id,
+            'quantity' => 2,
+        ])->assertSessionHas('success');
+
+    MedicineBatch::where('medicine_id', $medicine->id)->update(['remaining_quantity' => 1]);
+
+    $this->actingAs($pasien)
+        ->post(route('customer.checkout.store'), [
+            'notes' => 'Stok berubah',
+        ])->assertSessionHasErrors('message');
+
+    $this->assertDatabaseMissing('orders', [
+        'user_id' => $pasien->id,
+    ]);
+    Http::assertNothingSent();
+});
+
+test('layanan stok menolak stok tidak cukup tanpa mengubah batch atau mutasi stok', function () {
+    $medicine = medicineWithStock([], ['quantity' => 2]);
+    $batch = $medicine->batches()->first();
+
+    expect(fn () => app(StockService::class)->deductStock($medicine->id, 3, 'test', 1))
+        ->toThrow(Exception::class, 'Insufficient stock');
+
+    expect($batch->refresh()->remaining_quantity)->toBe(2);
+    $this->assertDatabaseCount('stock_movements', 0);
+});
+
+test('checkout obat resep membuat pesanan dan mengirim notifikasi ke apoteker', function () {
     Storage::fake('public');
 
     $pasien = userWithRole('pasien');
@@ -202,7 +260,37 @@ test('checkout creates prescription orders and notifies pharmacists', function (
     ]);
 });
 
-test('pharmacist can approve and reject prescription orders', function () {
+test('checkout obat resep mewajibkan unggah gambar resep yang valid', function () {
+    Storage::fake('public');
+
+    $pasien = userWithRole('pasien');
+    $medicine = medicineWithStock([
+        'requires_prescription' => true,
+    ]);
+
+    $this->actingAs($pasien)
+        ->post(route('customer.cart.add'), [
+            'medicine_id' => $medicine->id,
+            'quantity' => 1,
+        ]);
+
+    $this->actingAs($pasien)
+        ->post(route('customer.checkout.store'), [
+            'notes' => 'Tanpa upload resep',
+        ])->assertSessionHasErrors('prescription_image');
+
+    $this->actingAs($pasien)
+        ->post(route('customer.checkout.store'), [
+            'notes' => 'Upload file salah',
+            'prescription_image' => UploadedFile::fake()->create('resep.pdf', 10, 'application/pdf'),
+        ])->assertSessionHasErrors('prescription_image');
+
+    $this->assertDatabaseMissing('orders', [
+        'user_id' => $pasien->id,
+    ]);
+});
+
+test('apoteker dapat menyetujui dan menolak pesanan resep', function () {
     $pasien = userWithRole('pasien');
     $apoteker = userWithRole('apoteker');
 
@@ -243,7 +331,7 @@ test('pharmacist can approve and reject prescription orders', function () {
         ->and($rejectedOrder->notes)->toContain('Resep tidak terbaca');
 });
 
-test('stock service deducts stock with FIFO batch ordering', function () {
+test('layanan stok mengurangi stok berdasarkan urutan batch FIFO', function () {
     $medicine = medicineWithStock(['code' => 'FIFO-001'], [
         'batch_number' => 'OLDER',
         'quantity' => 3,
@@ -268,7 +356,7 @@ test('stock service deducts stock with FIFO batch ordering', function () {
     $this->assertDatabaseCount('stock_movements', 2);
 });
 
-test('cashier POS checkout creates completed order and deducts stock', function () {
+test('checkout POS kasir membuat pesanan selesai dan mengurangi stok', function () {
     $cashier = userWithRole('kasir');
     $medicine = medicineWithStock(['price' => 12000], ['quantity' => 5]);
 
@@ -298,7 +386,7 @@ test('cashier POS checkout creates completed order and deducts stock', function 
     ]);
 });
 
-test('midtrans webhook validates signature, marks order paid, and deducts stock', function () {
+test('webhook Midtrans memvalidasi signature, menandai pesanan lunas, dan mengurangi stok', function () {
     $pasien = userWithRole('pasien');
     $medicine = medicineWithStock(['price' => 20000], ['quantity' => 4]);
 
@@ -318,19 +406,7 @@ test('midtrans webhook validates signature, marks order paid, and deducts stock'
         'subtotal' => 40000,
     ]);
 
-    $payload = [
-        'order_id' => $order->order_number,
-        'status_code' => '200',
-        'gross_amount' => '40000.00',
-        'transaction_status' => 'settlement',
-        'fraud_status' => 'accept',
-        'payment_type' => 'bank_transfer',
-        'transaction_id' => 'midtrans-transaction-id',
-    ];
-    $payload['signature_key'] = hash(
-        'sha512',
-        $payload['order_id'].$payload['status_code'].$payload['gross_amount'].config('services.midtrans.server_key')
-    );
+    $payload = signedMidtransPayload($order);
 
     $this->postJson(route('payments.midtrans.notification'), $payload)
         ->assertOk()
@@ -341,7 +417,126 @@ test('midtrans webhook validates signature, marks order paid, and deducts stock'
         ->and((int) MedicineBatch::where('medicine_id', $medicine->id)->sum('remaining_quantity'))->toBe(2);
 });
 
-test('non-prescription checkout creates Midtrans transaction before payment', function () {
+test('webhook Midtrans menolak signature tidak valid tanpa mengubah pesanan', function () {
+    $pasien = userWithRole('pasien');
+    $order = Order::create([
+        'user_id' => $pasien->id,
+        'order_number' => 'ORD-BAD-SIGNATURE',
+        'total_amount' => 30000,
+        'order_status' => 'waiting_payment',
+        'payment_status' => 'unpaid',
+        'payment_provider' => 'midtrans',
+    ]);
+
+    $payload = signedMidtransPayload($order);
+    $payload['signature_key'] = 'invalid-signature';
+
+    $this->postJson(route('payments.midtrans.notification'), $payload)
+        ->assertForbidden()
+        ->assertJson(['message' => 'Invalid signature.']);
+
+    expect($order->refresh()->payment_status)->toBe('unpaid')
+        ->and($order->order_status)->toBe('waiting_payment');
+});
+
+test('webhook Midtrans lunas yang duplikat tidak mengurangi stok dua kali', function () {
+    $pasien = userWithRole('pasien');
+    $medicine = medicineWithStock(['price' => 20000], ['quantity' => 5]);
+
+    $order = Order::create([
+        'user_id' => $pasien->id,
+        'order_number' => 'ORD-DUPLICATE',
+        'total_amount' => 40000,
+        'order_status' => 'waiting_payment',
+        'payment_status' => 'unpaid',
+        'payment_provider' => 'midtrans',
+    ]);
+
+    $order->items()->create([
+        'medicine_id' => $medicine->id,
+        'quantity' => 2,
+        'price' => 20000,
+        'subtotal' => 40000,
+    ]);
+
+    $payload = signedMidtransPayload($order);
+
+    $this->postJson(route('payments.midtrans.notification'), $payload)->assertOk();
+    $this->postJson(route('payments.midtrans.notification'), $payload)->assertOk();
+
+    expect($order->refresh()->payment_status)->toBe('paid')
+        ->and((int) MedicineBatch::where('medicine_id', $medicine->id)->sum('remaining_quantity'))->toBe(3);
+
+    $this->assertDatabaseCount('stock_movements', 1);
+});
+
+test('selisih nominal pembayaran Midtrans ditolak tanpa mengurangi stok', function () {
+    $pasien = userWithRole('pasien');
+    $medicine = medicineWithStock(['price' => 20000], ['quantity' => 5]);
+
+    $order = Order::create([
+        'user_id' => $pasien->id,
+        'order_number' => 'ORD-GROSS-MISMATCH',
+        'total_amount' => 40000,
+        'order_status' => 'waiting_payment',
+        'payment_status' => 'unpaid',
+        'payment_provider' => 'midtrans',
+    ]);
+
+    $order->items()->create([
+        'medicine_id' => $medicine->id,
+        'quantity' => 2,
+        'price' => 20000,
+        'subtotal' => 40000,
+    ]);
+
+    $payload = signedMidtransPayload($order, [
+        'gross_amount' => '39000.00',
+    ]);
+
+    expect(fn () => app(OrderService::class)->applyMidtransNotification($order->order_number, $payload))
+        ->toThrow(Exception::class, 'gross amount');
+
+    expect($order->refresh()->payment_status)->toBe('unpaid')
+        ->and((int) MedicineBatch::where('medicine_id', $medicine->id)->sum('remaining_quantity'))->toBe(5);
+
+    $this->assertDatabaseCount('stock_movements', 0);
+});
+
+test('pembatalan Midtrans menandai pesanan belum bayar sebagai gagal tanpa mengurangi stok', function () {
+    $pasien = userWithRole('pasien');
+    $medicine = medicineWithStock(['price' => 20000], ['quantity' => 5]);
+
+    $order = Order::create([
+        'user_id' => $pasien->id,
+        'order_number' => 'ORD-CANCELLED',
+        'total_amount' => 40000,
+        'order_status' => 'waiting_payment',
+        'payment_status' => 'unpaid',
+        'payment_provider' => 'midtrans',
+    ]);
+
+    $order->items()->create([
+        'medicine_id' => $medicine->id,
+        'quantity' => 2,
+        'price' => 20000,
+        'subtotal' => 40000,
+    ]);
+
+    app(OrderService::class)->applyMidtransNotification($order->order_number, signedMidtransPayload($order, [
+        'status_code' => '202',
+        'transaction_status' => 'expire',
+        'fraud_status' => null,
+    ]));
+
+    expect($order->refresh()->payment_status)->toBe('failed')
+        ->and($order->order_status)->toBe('cancelled')
+        ->and((int) MedicineBatch::where('medicine_id', $medicine->id)->sum('remaining_quantity'))->toBe(5);
+
+    $this->assertDatabaseCount('stock_movements', 0);
+});
+
+test('checkout obat nonresep membuat transaksi Midtrans sebelum pembayaran', function () {
     Http::fake([
         'app.sandbox.midtrans.com/snap/v1/transactions' => Http::response([
             'token' => 'snap-token',
@@ -370,7 +565,36 @@ test('non-prescription checkout creates Midtrans transaction before payment', fu
         ->and($order->midtrans_snap_token)->toBe('snap-token');
 });
 
-test('reverb broadcasting is configured and private notification channel is authorized', function () {
+test('route terlindungi role menolak akses lintas role', function () {
+    $admin = userWithRole('admin');
+    $apoteker = userWithRole('apoteker');
+    $kasir = userWithRole('kasir');
+    $pasien = userWithRole('pasien');
+
+    $this->actingAs($kasir)->get(route('admin.dashboard'))->assertForbidden();
+    $this->actingAs($pasien)->get(route('cashier.dashboard'))->assertForbidden();
+    $this->actingAs($admin)->get(route('pharmacist.dashboard'))->assertForbidden();
+    $this->actingAs($apoteker)->get(route('customer.dashboard'))->assertForbidden();
+});
+
+test('pelanggan tidak dapat mengakses pesanan milik pelanggan lain', function () {
+    $owner = userWithRole('pasien');
+    $otherCustomer = userWithRole('pasien');
+
+    $order = Order::create([
+        'user_id' => $owner->id,
+        'order_number' => 'ORD-OWNER-ONLY',
+        'total_amount' => 10000,
+        'order_status' => 'waiting_payment',
+        'payment_status' => 'unpaid',
+    ]);
+
+    $this->actingAs($otherCustomer)
+        ->get(route('customer.orders.show', $order))
+        ->assertForbidden();
+});
+
+test('broadcasting Reverb terkonfigurasi dan kanal privat notifikasi terotorisasi', function () {
     Config::set('broadcasting.default', 'reverb');
     Config::set('broadcasting.connections.reverb.key', 'test-key');
     Config::set('broadcasting.connections.reverb.secret', 'test-secret');
@@ -402,7 +626,7 @@ test('reverb broadcasting is configured and private notification channel is auth
         ])->assertForbidden();
 });
 
-test('frontend echo wiring is present for realtime notifications', function () {
+test('koneksi Echo frontend tersedia untuk notifikasi waktu nyata', function () {
     expect(file_get_contents(resource_path('js/echo.ts')))->toContain(
         "broadcaster: 'reverb'",
         'VITE_REVERB_APP_KEY'
@@ -411,8 +635,10 @@ test('frontend echo wiring is present for realtime notifications', function () {
     expect(file_get_contents(resource_path('js/app.tsx')))->toContain("import './echo';");
 
     expect(file_get_contents(resource_path('js/Layouts/AppLayout.tsx')))->toContain(
-        'user-notifications.${auth.user.id}',
-        "channel.listen('.notification.created'"
+        'user-notifications.${userId}',
+        'window.Echo.private(channelName)',
+        'channel.listen(',
+        "'.notification.created'"
     );
 
     expect(json_decode(file_get_contents(base_path('package.json')), true)['dependencies'])

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import AppLayout from '../../../Layouts/AppLayout';
 
 declare global {
@@ -18,7 +18,7 @@ declare global {
 
 export default function OrderShow({ order }: { order: any }) {
     const { url } = usePage();
-    const [paymentOpened, setPaymentOpened] = useState(false);
+    const paymentOpenedRef = useRef(false);
     const [paymentChecking, setPaymentChecking] = useState(false);
     const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
     const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -78,20 +78,26 @@ export default function OrderShow({ order }: { order: any }) {
     const isMidtransPending =
         order.payment_provider === 'midtrans' &&
         order.payment_status === 'pending';
-    const syncPaymentStatus = (
-        message = 'Sedang memverifikasi pembayaran. Mohon tunggu sebentar.',
-    ) => {
-        setPaymentError(null);
-        setPaymentNotice(message);
-        setPaymentChecking(true);
+    const syncPaymentStatus = useCallback(
+        (
+            message = 'Sedang memverifikasi pembayaran. Mohon tunggu sebentar.',
+        ) => {
+            setPaymentError(null);
+            setPaymentNotice(message);
+            setPaymentChecking(true);
 
-        router.visit(`/customer/orders/${order.order_number}?sync_payment=1`, {
-            preserveScroll: true,
-            onFinish: () => setPaymentChecking(false),
-        });
-    };
+            router.visit(
+                `/customer/orders/${order.order_number}?sync_payment=1`,
+                {
+                    preserveScroll: true,
+                    onFinish: () => setPaymentChecking(false),
+                },
+            );
+        },
+        [order.order_number],
+    );
 
-    const openPayment = () => {
+    const openPayment = useCallback(() => {
         setPaymentError(null);
         setPaymentNotice(null);
 
@@ -105,6 +111,7 @@ export default function OrderShow({ order }: { order: any }) {
                     onFinish: () => setPaymentChecking(false),
                 },
             );
+
             return;
         }
 
@@ -134,28 +141,39 @@ export default function OrderShow({ order }: { order: any }) {
                 setPaymentChecking(false);
             },
         });
-    };
+    }, [
+        hasSnapToken,
+        order.midtrans_redirect_url,
+        order.midtrans_snap_token,
+        order.order_number,
+        syncPaymentStatus,
+    ]);
 
     useEffect(() => {
         if (
             !canPay ||
             !hasSnapToken ||
-            paymentOpened ||
+            paymentOpenedRef.current ||
             (!url.includes('pay=1') && !url.includes('sync_payment=1'))
         ) {
             return;
         }
 
-        setPaymentOpened(true);
+        paymentOpenedRef.current = true;
         window.history.replaceState({}, '', window.location.pathname);
 
-        if (url.includes('pay=1')) {
-            openPayment();
-            return;
-        }
+        const timer = window.setTimeout(() => {
+            if (url.includes('pay=1')) {
+                openPayment();
 
-        syncPaymentStatus();
-    }, [canPay, hasSnapToken, paymentOpened, url]);
+                return;
+            }
+
+            syncPaymentStatus();
+        }, 0);
+
+        return () => window.clearTimeout(timer);
+    }, [canPay, hasSnapToken, openPayment, syncPaymentStatus, url]);
 
     return (
         <AppLayout title={`Pesanan #${order.order_number}`}>

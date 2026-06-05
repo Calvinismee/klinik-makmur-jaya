@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 
 type FileUploadFieldProps = {
     label: string;
@@ -33,28 +33,22 @@ export default function FileUploadField({
     const [localFile, setLocalFile] = useState<File | null>(
         selectedFile || null,
     );
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const activeFile = selectedFile !== undefined ? selectedFile : localFile;
+    const previewUrl = useMemo(() => {
+        if (!previewImage || !activeFile?.type.startsWith('image/')) {
+            return null;
+        }
+
+        return URL.createObjectURL(activeFile);
+    }, [activeFile, previewImage]);
 
     useEffect(() => {
-        setLocalFile(selectedFile || null);
-    }, [selectedFile]);
-
-    useEffect(() => {
-        if (
-            !previewImage ||
-            !activeFile ||
-            !activeFile.type.startsWith('image/')
-        ) {
-            setPreviewUrl(null);
+        if (!previewUrl) {
             return;
         }
 
-        const objectUrl = URL.createObjectURL(activeFile);
-        setPreviewUrl(objectUrl);
-
-        return () => URL.revokeObjectURL(objectUrl);
-    }, [activeFile, previewImage]);
+        return () => URL.revokeObjectURL(previewUrl);
+    }, [previewUrl]);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0] || null;

@@ -31,8 +31,8 @@ class MidtransPaymentService
             ->asJson()
             ->post($this->snapEndpoint(), $this->payload($order));
 
-        if (!$response->successful()) {
-            throw new RuntimeException('Gagal membuat transaksi Midtrans: ' . $response->body());
+        if (! $response->successful()) {
+            throw new RuntimeException('Gagal membuat transaksi Midtrans: '.$response->body());
         }
 
         $data = $response->json();
@@ -52,15 +52,15 @@ class MidtransPaymentService
     {
         $signature = $payload['signature_key'] ?? null;
 
-        if (!$signature) {
+        if (! $signature) {
             return false;
         }
 
         $expected = hash(
             'sha512',
-            ($payload['order_id'] ?? '') .
-            ($payload['status_code'] ?? '') .
-            ($payload['gross_amount'] ?? '') .
+            ($payload['order_id'] ?? '').
+            ($payload['status_code'] ?? '').
+            ($payload['gross_amount'] ?? '').
             $this->serverKey()
         );
 
@@ -73,8 +73,8 @@ class MidtransPaymentService
             ->acceptJson()
             ->get($this->statusEndpoint($order));
 
-        if (!$response->successful()) {
-            throw new RuntimeException('Gagal mengecek status transaksi Midtrans: ' . $response->body());
+        if (! $response->successful()) {
+            throw new RuntimeException('Gagal mengecek status transaksi Midtrans: '.$response->body());
         }
 
         return $response->json();
@@ -116,14 +116,14 @@ class MidtransPaymentService
             ? 'https://api.midtrans.com/v2'
             : 'https://api.sandbox.midtrans.com/v2';
 
-        return $baseUrl . '/' . rawurlencode($order->order_number) . '/status';
+        return $baseUrl.'/'.rawurlencode($order->order_number).'/status';
     }
 
     private function serverKey(): string
     {
         $serverKey = config('services.midtrans.server_key');
 
-        if (!$serverKey) {
+        if (! $serverKey) {
             throw new RuntimeException('MIDTRANS_SERVER_KEY belum dikonfigurasi.');
         }
 

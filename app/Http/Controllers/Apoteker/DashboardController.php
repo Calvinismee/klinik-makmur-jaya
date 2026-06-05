@@ -6,9 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Medicine;
 use App\Models\MedicineBatch;
 use App\Models\Order;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Carbon\Carbon;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {

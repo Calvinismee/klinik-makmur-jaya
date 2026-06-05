@@ -10,11 +10,9 @@ use Illuminate\Notifications\Notification;
 
 class AppErrorNotification extends Notification
 {
-    use Queueable, ChoosesNotificationChannels;
+    use ChoosesNotificationChannels, Queueable;
 
-    public function __construct(private ErrorLog $errorLog)
-    {
-    }
+    public function __construct(private ErrorLog $errorLog) {}
 
     public function toDatabase(object $notifiable): array
     {

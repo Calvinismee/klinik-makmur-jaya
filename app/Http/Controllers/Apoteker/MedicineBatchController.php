@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Apoteker;
 
 use App\Http\Controllers\Controller;
-use App\Models\MedicineBatch;
 use App\Models\Medicine;
+use App\Models\MedicineBatch;
 use App\Services\StockService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

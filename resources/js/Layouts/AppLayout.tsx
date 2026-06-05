@@ -19,7 +19,7 @@ interface Props {
 
 interface ToastState {
     id: number;
-    type: 'success' | 'error';
+    type: 'success' | 'error' | 'info';
     message: string;
 }
 
@@ -140,6 +140,11 @@ const Icons = {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
         </svg>
     ),
+    infoCircle: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11v5m0-8h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    ),
 };
 
 function getNavSections(role: string): NavSection[] {
@@ -211,6 +216,7 @@ function getNavSections(role: string): NavSection[] {
                     title: 'TRANSAKSI',
                     items: [
                         { label: 'Pembayaran Offline', href: '/cashier/pos', icon: Icons.pos },
+                        { label: 'Pembayaran Online', href: '/cashier/payments', icon: Icons.payment },
                     ],
                 },
             ];
@@ -303,8 +309,28 @@ export default function AppLayout({ title, children }: Props) {
     const navSections = getNavSections(role);
     const breadcrumbs = getBreadcrumbs(currentPath, role);
     const errorMessage = errors?.message || Object.values(errors || {}).find((message) => typeof message === 'string');
-    const noticeMessage = flash?.success || errorMessage;
-    const noticeType: ToastState['type'] = flash?.success ? 'success' : 'error';
+    const noticeMessage = flash?.success || flash?.info || errorMessage;
+    const noticeType: ToastState['type'] = flash?.success ? 'success' : flash?.info ? 'info' : 'error';
+    const toastStyle = toast?.type === 'success'
+        ? {
+            border: 'border-emerald-200',
+            icon: 'bg-emerald-50 text-emerald-600',
+            title: 'Berhasil',
+            iconElement: Icons.check,
+        }
+        : toast?.type === 'info'
+            ? {
+                border: 'border-cyan-200',
+                icon: 'bg-cyan-50 text-cyan-600',
+                title: 'Info',
+                iconElement: Icons.infoCircle,
+            }
+            : {
+                border: 'border-red-200',
+                icon: 'bg-red-50 text-red-600',
+                title: 'Gagal',
+                iconElement: Icons.xCircle,
+            };
 
     const isActive = (href: string) => currentPath.startsWith(href);
 
@@ -416,9 +442,11 @@ export default function AppLayout({ title, children }: Props) {
         <>
             {/* Brand */}
             <div className="flex items-center gap-3 px-5 h-16 border-b border-slate-700/50 shrink-0">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold text-sm">
-                    K
-                </div>
+                <img
+                    src="/Logo.webp"
+                    alt="Logo Klinik Makmur Jaya"
+                    className="h-8 w-8 object-contain"
+                />
                 <div>
                     <div className="font-bold text-white text-sm leading-tight">Klinik Makmur Jaya</div>
                     <div className="text-[10px] text-slate-400 leading-tight">Sistem E-Commerce Obat</div>
@@ -494,22 +522,16 @@ export default function AppLayout({ title, children }: Props) {
                     <div
                         role="status"
                         aria-live="polite"
-                        className={`toast-enter flex items-start gap-3 rounded-lg border bg-white p-4 shadow-xl shadow-slate-900/10 ring-1 ring-black/5 ${
-                            toast.type === 'success' ? 'border-emerald-200' : 'border-red-200'
-                        }`}
+                        className={`toast-enter flex items-start gap-3 rounded-lg border bg-white p-4 shadow-xl shadow-slate-900/10 ring-1 ring-black/5 ${toastStyle.border}`}
                     >
                         <div
-                            className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                                toast.type === 'success'
-                                    ? 'bg-emerald-50 text-emerald-600'
-                                    : 'bg-red-50 text-red-600'
-                            }`}
+                            className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${toastStyle.icon}`}
                         >
-                            {toast.type === 'success' ? Icons.check : Icons.xCircle}
+                            {toastStyle.iconElement}
                         </div>
                         <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold text-slate-900">
-                                {toast.type === 'success' ? 'Berhasil' : 'Gagal'}
+                                {toastStyle.title}
                             </p>
                             <p className="mt-1 break-words text-sm text-slate-600">{toast.message}</p>
                         </div>
@@ -535,7 +557,7 @@ export default function AppLayout({ title, children }: Props) {
                             preserveScroll: true,
                             onSuccess: () => setSessionWarning(false),
                         })}
-                        className="mt-3 rounded bg-yellow-500 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-yellow-600"
+                        className="btn-primary mt-3 px-3 py-1.5 text-sm"
                     >
                         Tetap aktif
                     </button>

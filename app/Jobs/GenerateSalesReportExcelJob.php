@@ -18,6 +18,7 @@ class GenerateSalesReportExcelJob implements ShouldQueue
     use Queueable;
 
     public int $tries = 2;
+
     private int $reportJobId;
 
     public function __construct(int $reportJobId)
@@ -29,7 +30,7 @@ class GenerateSalesReportExcelJob implements ShouldQueue
     {
         $reportJob = ReportJob::findOrFail($this->reportJobId);
         $user = User::find($reportJob->user_id);
-        $filename = 'sales-report-' . now()->format('Ymd-His') . '-' . $reportJob->user_id . '.xlsx';
+        $filename = 'sales-report-'.now()->format('Ymd-His').'-'.$reportJob->user_id.'.xlsx';
         $path = "reports/{$filename}";
 
         try {
@@ -60,7 +61,7 @@ class GenerateSalesReportExcelJob implements ShouldQueue
                 );
             }
         } catch (Throwable $exception) {
-            $this->updateProgress($reportJob, 'failed', 100, 'Gagal membuat laporan Excel: ' . $exception->getMessage(), [
+            $this->updateProgress($reportJob, 'failed', 100, 'Gagal membuat laporan Excel: '.$exception->getMessage(), [
                 'finished_at' => now(),
             ]);
 

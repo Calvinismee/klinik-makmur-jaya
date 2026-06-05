@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
 use App\Models\Medicine;
 use App\Models\MedicineBatch;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
+use App\Models\Order;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class ReportController extends Controller
 {
@@ -19,7 +18,7 @@ class ReportController extends Controller
         $todaySales = Order::where('payment_status', 'paid')
             ->whereDate('created_at', Carbon::today())
             ->sum('total_amount');
-            
+
         $monthSales = Order::where('payment_status', 'paid')
             ->whereMonth('created_at', Carbon::now()->month)
             ->whereYear('created_at', Carbon::now()->year)
@@ -40,15 +39,17 @@ class ReportController extends Controller
             ->limit(5)
             ->get();
 
-        // 4. Low Stock Medicines (Total stock < 20)
-        // This query requires calculating total stock. A simpler way is to get all medicines and filter, 
-        // or join with medicine_batches and group by medicine_id
-        $lowStockMedicines = Medicine::select('medicines.id', 'medicines.name')
+        $allMedicinesStock = Medicine::select('medicines.id', 'medicines.name', 'medicines.code', 'medicines.minimum_stock')
             ->selectRaw('COALESCE(SUM(medicine_batches.remaining_quantity), 0) as total_stock')
             ->leftJoin('medicine_batches', 'medicines.id', '=', 'medicine_batches.medicine_id')
-            ->groupBy('medicines.id', 'medicines.name')
-            ->having('total_stock', '<', 20)
+            ->groupBy('medicines.id', 'medicines.name', 'medicines.code', 'medicines.minimum_stock')
+            ->orderByDesc('total_stock')
             ->get();
+
+        // 4. Low Stock Medicines (Total stock < configured minimum threshold, fallback 20)
+        $lowStockMedicines = $allMedicinesStock
+            ->filter(fn ($medicine) => (int) $medicine->total_stock < (int) ($medicine->minimum_stock ?: 20))
+            ->values();
 
         // 5. Expiring Batches (Expires within 30 days)
         $expiringBatches = MedicineBatch::with('medicine')
@@ -57,37 +58,24 @@ class ReportController extends Controller
             ->orderBy('expired_at', 'asc')
             ->get();
 
-        // 6. Sales Data for Chart (Last 7 days)
-        $salesChartData = [];
-        $labels = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::today()->subDays($i);
-            $labels[] = $date->format('M d');
+        $stockChart = $allMedicinesStock
+            ->sortBy('total_stock')
+            ->take(8)
+            ->map(fn ($medicine) => [
+                'id' => $medicine->id,
+                'label' => $medicine->name,
+                'code' => $medicine->code,
+                'stock' => (int) $medicine->total_stock,
+                'minimumStock' => (int) ($medicine->minimum_stock ?: 20),
+            ])
+            ->values();
 
-            $baseQuery = Order::where('payment_status', 'paid')
-                ->whereDate('created_at', $date);
-
-            $offlineQuery = (clone $baseQuery)->where('order_number', 'like', 'POS-%');
-            $onlineQuery = (clone $baseQuery)->where('order_number', 'not like', 'POS-%');
-
-            $salesChartData[] = [
-                'date' => $date->toDateString(),
-                'label' => $date->format('M d'),
-                'total' => (float) (clone $baseQuery)->sum('total_amount'),
-                'transactions' => (clone $baseQuery)->count(),
-                'offlineTotal' => (float) (clone $offlineQuery)->sum('total_amount'),
-                'offlineTransactions' => (clone $offlineQuery)->count(),
-                'onlineTotal' => (float) (clone $onlineQuery)->sum('total_amount'),
-                'onlineTransactions' => (clone $onlineQuery)->count(),
-            ];
-        }
-
-        $allMedicinesStock = Medicine::select('medicines.id', 'medicines.name', 'medicines.code')
-            ->selectRaw('COALESCE(SUM(medicine_batches.remaining_quantity), 0) as total_stock')
-            ->leftJoin('medicine_batches', 'medicines.id', '=', 'medicine_batches.medicine_id')
-            ->groupBy('medicines.id', 'medicines.name', 'medicines.code')
-            ->orderByDesc('total_stock')
-            ->get();
+        $stockSummary = [
+            'totalMedicines' => $allMedicinesStock->count(),
+            'totalUnits' => (int) $allMedicinesStock->sum('total_stock'),
+            'critical' => $lowStockMedicines->count(),
+            'empty' => $allMedicinesStock->filter(fn ($medicine) => (int) $medicine->total_stock <= 0)->count(),
+        ];
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => [
@@ -97,13 +85,77 @@ class ReportController extends Controller
                 'completedOrders' => $completedOrders,
             ],
             'topMedicines' => $topMedicines,
-            'lowStockMedicines' => $lowStockMedicines,
             'expiringBatches' => $expiringBatches,
             'allMedicinesStock' => $allMedicinesStock,
             'chart' => [
-                'labels' => $labels,
-                'data' => $salesChartData,
-            ]
+                'periods' => [
+                    'daily' => $this->buildSalesSeries('daily'),
+                    'weekly' => $this->buildSalesSeries('weekly'),
+                    'monthly' => $this->buildSalesSeries('monthly'),
+                ],
+                'stock' => [
+                    'summary' => $stockSummary,
+                    'items' => $stockChart,
+                ],
+            ],
         ]);
+    }
+
+    private function buildSalesSeries(string $period): array
+    {
+        $items = [];
+
+        $ranges = match ($period) {
+            'weekly' => collect(range(5, 0))->map(function (int $week) {
+                $start = Carbon::today()->subWeeks($week)->startOfWeek();
+                $end = (clone $start)->endOfWeek();
+
+                return [
+                    'start' => $start,
+                    'end' => $end,
+                    'label' => $start->format('d M').' - '.$end->format('d M'),
+                ];
+            }),
+            'monthly' => collect(range(5, 0))->map(function (int $month) {
+                $start = Carbon::today()->subMonths($month)->startOfMonth();
+                $end = (clone $start)->endOfMonth();
+
+                return [
+                    'start' => $start,
+                    'end' => $end,
+                    'label' => $start->format('M Y'),
+                ];
+            }),
+            default => collect(range(6, 0))->map(function (int $day) {
+                $date = Carbon::today()->subDays($day);
+
+                return [
+                    'start' => (clone $date)->startOfDay(),
+                    'end' => (clone $date)->endOfDay(),
+                    'label' => $date->format('M d'),
+                ];
+            }),
+        };
+
+        foreach ($ranges as $range) {
+            $baseQuery = Order::where('payment_status', 'paid')
+                ->whereBetween('created_at', [$range['start'], $range['end']]);
+
+            $offlineQuery = (clone $baseQuery)->where('order_number', 'like', 'POS-%');
+            $onlineQuery = (clone $baseQuery)->where('order_number', 'not like', 'POS-%');
+
+            $items[] = [
+                'date' => $range['start']->toDateString(),
+                'label' => $range['label'],
+                'total' => (float) (clone $baseQuery)->sum('total_amount'),
+                'transactions' => (clone $baseQuery)->count(),
+                'offlineTotal' => (float) (clone $offlineQuery)->sum('total_amount'),
+                'offlineTransactions' => (clone $offlineQuery)->count(),
+                'onlineTotal' => (float) (clone $onlineQuery)->sum('total_amount'),
+                'onlineTransactions' => (clone $onlineQuery)->count(),
+            ];
+        }
+
+        return $items;
     }
 }

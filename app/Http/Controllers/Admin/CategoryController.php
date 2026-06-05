@@ -12,8 +12,9 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = Category::latest()->get();
+
         return Inertia::render('Admin/Categories/Index', [
-            'categories' => $categories
+            'categories' => $categories,
         ]);
     }
 
@@ -21,10 +22,11 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
         ]);
 
         Category::create($validated);
+
         return back()->with('success', 'Category created successfully.');
     }
 
@@ -32,16 +34,18 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
         ]);
 
         $category->update($validated);
+
         return back()->with('success', 'Category updated successfully.');
     }
 
     public function destroy(Category $category)
     {
         $category->delete();
+
         return back()->with('success', 'Category deleted successfully.');
     }
 }

@@ -10,11 +10,9 @@ use Illuminate\Notifications\Notification;
 
 class NewProcessingOrderNotification extends Notification
 {
-    use Queueable, ChoosesNotificationChannels;
+    use ChoosesNotificationChannels, Queueable;
 
-    public function __construct(private Order $order)
-    {
-    }
+    public function __construct(private Order $order) {}
 
     public function toDatabase(object $notifiable): array
     {

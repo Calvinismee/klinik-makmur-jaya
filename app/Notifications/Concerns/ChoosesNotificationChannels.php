@@ -6,7 +6,7 @@ trait ChoosesNotificationChannels
 {
     public function via(object $notifiable): array
     {
-        if (!config('services.notifications.mail_enabled')) {
+        if (! config('services.notifications.mail_enabled')) {
             return ['database'];
         }
 

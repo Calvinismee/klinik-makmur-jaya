@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notification;
 
 class SystemJobStatusNotification extends Notification
 {
-    use Queueable, ChoosesNotificationChannels;
+    use ChoosesNotificationChannels, Queueable;
 
     public function __construct(
         private string $title,
@@ -17,8 +17,7 @@ class SystemJobStatusNotification extends Notification
         private string $severity = 'info',
         private ?string $url = null,
         private ?string $dedupeKey = null
-    ) {
-    }
+    ) {}
 
     public function toDatabase(object $notifiable): array
     {
@@ -28,7 +27,7 @@ class SystemJobStatusNotification extends Notification
             'severity' => $this->severity,
             'message' => $this->message,
             'url' => $this->url,
-            'dedupe_key' => $this->dedupeKey ?? 'system_job:' . md5($this->title . $this->message . now()->timestamp),
+            'dedupe_key' => $this->dedupeKey ?? 'system_job:'.md5($this->title.$this->message.now()->timestamp),
         ];
     }
 

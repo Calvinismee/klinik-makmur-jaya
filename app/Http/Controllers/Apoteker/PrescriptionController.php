@@ -20,9 +20,9 @@ class PrescriptionController extends Controller
     public function index()
     {
         $orders = Order::where('prescription_status', 'pending')
-                       ->with(['user', 'items.medicine'])
-                       ->latest()
-                       ->get();
+            ->with(['user', 'items.medicine'])
+            ->latest()
+            ->get();
 
         return Inertia::render('Pharmacist/Prescriptions/Index', [
             'orders' => $orders,
@@ -38,6 +38,7 @@ class PrescriptionController extends Controller
 
         try {
             $this->orderService->verifyPrescription($order->id, $validated['status'], $validated['reason'] ?? null);
+
             return back()->with('success', 'Prescription verified successfully.');
         } catch (\Exception $e) {
             return back()->withErrors(['message' => $e->getMessage()]);
@@ -47,9 +48,9 @@ class PrescriptionController extends Controller
     public function history()
     {
         $orders = Order::whereIn('prescription_status', ['approved', 'rejected'])
-                       ->with(['user', 'items.medicine'])
-                       ->latest()
-                       ->get();
+            ->with(['user', 'items.medicine'])
+            ->latest()
+            ->get();
 
         return Inertia::render('Pharmacist/Prescriptions/History', [
             'orders' => $orders,

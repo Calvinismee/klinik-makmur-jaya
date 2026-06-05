@@ -4,17 +4,18 @@ namespace App\Http\Controllers\Cashier;
 
 use App\Http\Controllers\Controller;
 use App\Models\Medicine;
-use App\Models\Category;
 use App\Services\CheckoutService;
 use App\Services\StockService;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Session;
+use Inertia\Inertia;
 
 class PosController extends Controller
 {
     private $sessionKey = 'pos_cart';
+
     protected $checkoutService;
+
     protected $stockService;
 
     public function __construct(CheckoutService $checkoutService, StockService $stockService)
@@ -28,8 +29,8 @@ class PosController extends Controller
         $query = Medicine::with('category')->where('is_active', true);
 
         if ($request->has('search') && $request->search != '') {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('code', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%')
+                ->orWhere('code', 'like', '%'.$request->search.'%');
         }
 
         $medicines = $query->paginate(12)->withQueryString();
@@ -38,6 +39,7 @@ class PosController extends Controller
         // Attach stock to medicines to help cashier
         $medicines->getCollection()->transform(function ($medicine) {
             $medicine->available_stock = $this->stockService->getTotalStock($medicine->id);
+
             return $medicine;
         });
 
@@ -67,7 +69,7 @@ class PosController extends Controller
         $availableStock = $this->stockService->getTotalStock($request->medicine_id);
         $cart = Session::get($this->sessionKey, []);
         $currentQty = isset($cart[$request->medicine_id]) ? $cart[$request->medicine_id]['quantity'] : 0;
-        
+
         if ($availableStock < ($currentQty + $request->quantity)) {
             return back()->withErrors(['message' => 'Insufficient stock.']);
         }
@@ -130,6 +132,7 @@ class PosController extends Controller
         try {
             $order = $this->checkoutService->processOfflineCheckout(auth()->id(), $cart, $request->only('notes'));
             Session::forget($this->sessionKey);
+
             return back()->with('success', "Order {$order->order_number} completed successfully!");
         } catch (\Exception $e) {
             return back()->withErrors(['message' => $e->getMessage()]);

@@ -56,7 +56,7 @@ export default function BatchesIndex({ batches, medicines }: { batches: any[], m
                         <input type="date" className="mt-1 block w-full rounded-md border p-2" value={data.received_at} onChange={e => setData('received_at', e.target.value)} />
                     </div>
                     <div className="lg:col-span-3">
-                        <button type="submit" disabled={processing} className="bg-blue-600 text-white px-4 py-2 rounded">
+                        <button type="submit" disabled={processing} className="btn-primary">
                             Add Batch
                         </button>
                     </div>

@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ImportMedicinesJob;
-use App\Models\Medicine;
 use App\Models\Category;
+use App\Models\Medicine;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class MedicineController extends Controller
 {
@@ -41,7 +41,7 @@ class MedicineController extends Controller
             'minimum_stock' => 'required|integer|min:0',
             'requires_prescription' => 'boolean',
             'is_active' => 'boolean',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|image|max:2048',
         ]);
 
         if ($request->hasFile('image')) {
@@ -49,6 +49,7 @@ class MedicineController extends Controller
         }
 
         Medicine::create($validated);
+
         return back()->with('success', 'Medicine created successfully.');
     }
 
@@ -57,7 +58,7 @@ class MedicineController extends Controller
         $validated = $request->validate([
             'category_id' => 'nullable|exists:categories,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
-            'code' => 'required|string|unique:medicines,code,' . $medicine->id,
+            'code' => 'required|string|unique:medicines,code,'.$medicine->id,
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'composition' => 'nullable|string',
@@ -67,7 +68,7 @@ class MedicineController extends Controller
             'minimum_stock' => 'required|integer|min:0',
             'requires_prescription' => 'boolean',
             'is_active' => 'boolean',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|image|max:2048',
         ]);
 
         if ($request->hasFile('image')) {
@@ -78,6 +79,7 @@ class MedicineController extends Controller
         }
 
         $medicine->update($validated);
+
         return back()->with('success', 'Medicine updated successfully.');
     }
 
@@ -87,13 +89,14 @@ class MedicineController extends Controller
             Storage::disk('public')->delete($medicine->image);
         }
         $medicine->delete();
+
         return back()->with('success', 'Medicine deleted successfully.');
     }
 
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:csv,xls,xlsx|max:10240'
+            'file' => 'required|mimes:csv,xls,xlsx|max:10240',
         ]);
 
         try {
@@ -102,7 +105,7 @@ class MedicineController extends Controller
 
             return back()->with('success', 'Import obat sedang diproses di background. Notifikasi akan muncul setelah selesai.');
         } catch (\Exception $e) {
-            return back()->withErrors(['message' => 'Gagal menjadwalkan import file: ' . $e->getMessage()]);
+            return back()->withErrors(['message' => 'Gagal menjadwalkan import file: '.$e->getMessage()]);
         }
     }
 }

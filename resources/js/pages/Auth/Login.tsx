@@ -71,9 +71,11 @@ export default function Login() {
             <div className="w-full max-w-md px-6">
                 {/* Brand */}
                 <div className="text-center mb-8">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4 shadow-lg transition-transform duration-200 hover:scale-105">
-                        K
-                    </div>
+                    <img
+                        src="/Logo.webp"
+                        alt="Logo Klinik Makmur Jaya"
+                        className="mx-auto mb-4 h-20 w-20 object-contain drop-shadow-lg transition-transform duration-200 hover:scale-105"
+                    />
                     <h1 className="text-2xl font-bold text-slate-800">Klinik Makmur Jaya</h1>
                     <p className="text-sm text-slate-400 mt-1">Sistem E-Commerce Penjualan Obat</p>
                 </div>

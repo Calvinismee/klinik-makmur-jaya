@@ -14,7 +14,7 @@ class NotificationDispatchService
         $exists = DB::table('notifications')
             ->where('notifiable_type', User::class)
             ->where('notifiable_id', $user->id)
-            ->where('data', 'like', '%"dedupe_key":"' . addcslashes($dedupeKey, '%_\\') . '"%')
+            ->where('data', 'like', '%"dedupe_key":"'.addcslashes($dedupeKey, '%_\\').'"%')
             ->exists();
 
         if ($exists) {

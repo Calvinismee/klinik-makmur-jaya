@@ -28,7 +28,7 @@ class AuditUserActivity
 
     private function shouldAudit(Request $request, Response $response): bool
     {
-        if (!in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+        if (! in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
             return false;
         }
 
@@ -65,7 +65,7 @@ class AuditUserActivity
 
         $summary = $payload->isEmpty()
             ? 'No request payload.'
-            : 'Payload: ' . $payload->take(8)->map(fn ($value, $key) => "{$key}={$value}")->implode(', ');
+            : 'Payload: '.$payload->take(8)->map(fn ($value, $key) => "{$key}={$value}")->implode(', ');
 
         return "{$request->method()} {$request->path()} returned {$response->getStatusCode()}. {$summary}";
     }

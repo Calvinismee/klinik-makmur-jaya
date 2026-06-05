@@ -2,16 +2,16 @@
 
 namespace App\Jobs;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 use App\Models\MedicineBatch;
 use App\Models\User;
 use App\Notifications\ExpiringBatchNotification;
 use App\Services\NotificationDispatchService;
 use Carbon\Carbon;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 
 class CheckExpiringMedicineJob implements ShouldQueue
 {
@@ -32,7 +32,7 @@ class CheckExpiringMedicineJob implements ShouldQueue
             $daysUntilExpired = (int) floor($today->diffInDays($batch->expired_at, false));
             $threshold = collect([30, 60, 90])->first(fn (int $days) => $daysUntilExpired <= $days);
 
-            if (!$threshold) {
+            if (! $threshold) {
                 continue;
             }
 

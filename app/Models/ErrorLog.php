@@ -10,7 +10,7 @@ class ErrorLog extends Model
     use HasFactory;
 
     protected $fillable = [
-        'severity', 'message', 'file', 'line', 'trace_summary', 'user_id', 'url', 'method'
+        'severity', 'message', 'file', 'line', 'trace_summary', 'user_id', 'url', 'method',
     ];
 
     public function user()

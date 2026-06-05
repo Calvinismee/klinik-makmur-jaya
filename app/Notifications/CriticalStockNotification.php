@@ -10,10 +10,12 @@ use Illuminate\Notifications\Notification;
 
 class CriticalStockNotification extends Notification
 {
-    use Queueable, ChoosesNotificationChannels;
+    use ChoosesNotificationChannels, Queueable;
 
     protected $medicine;
+
     protected int $currentStock;
+
     protected int $minimumStock;
 
     public function __construct(Medicine $medicine, int $currentStock, int $minimumStock)

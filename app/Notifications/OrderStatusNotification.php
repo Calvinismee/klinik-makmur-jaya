@@ -10,14 +10,13 @@ use Illuminate\Notifications\Notification;
 
 class OrderStatusNotification extends Notification
 {
-    use Queueable, ChoosesNotificationChannels;
+    use ChoosesNotificationChannels, Queueable;
 
     public function __construct(
         private Order $order,
         private string $statusLabel,
         private string $message
-    ) {
-    }
+    ) {}
 
     public function toDatabase(object $notifiable): array
     {

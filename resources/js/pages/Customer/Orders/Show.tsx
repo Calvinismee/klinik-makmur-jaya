@@ -32,7 +32,7 @@ export default function OrderShow({ order }: { order: any }) {
 
     const formatStatus = (status: string) => {
         const map: Record<string, string> = {
-            waiting_payment: 'Dikonfirmasi',
+            waiting_payment: 'Menunggu Pembayaran',
             waiting_prescription_verification: 'Verifikasi Resep',
             prescription_rejected: 'Prescription ditolak',
             paid: 'Sudah Dibayar',
@@ -131,7 +131,7 @@ export default function OrderShow({ order }: { order: any }) {
                         <h1 className="text-2xl font-bold">Pesanan #{order.order_number}</h1>
                         <p className="text-gray-500 text-sm mt-1">Dipesan pada {new Date(order.created_at).toLocaleString()}</p>
                     </div>
-                    <Link href="/customer/orders" className="text-blue-600 hover:underline">Kembali ke Pesanan</Link>
+                    <Link href="/customer/orders" className="text-cyan-600 hover:underline">Kembali ke Pesanan</Link>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -161,21 +161,12 @@ export default function OrderShow({ order }: { order: any }) {
                                 </div>
                             )}
                             {(isMidtransPending || paymentNotice) && (
-                                <div className="rounded border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
+                                <div className="rounded border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm text-cyan-800">
                                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                         <div className="flex items-center gap-2">
-                                            {paymentChecking && <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-300 border-t-blue-700" />}
+                                            {paymentChecking && <span className="h-3 w-3 animate-spin rounded-full border-2 border-cyan-300 border-t-cyan-700" />}
                                             <span>{paymentNotice || 'Pembayaran sedang diproses.'}</span>
                                         </div>
-                                        {isMidtransPending && !paymentChecking && (
-                                            <button
-                                                type="button"
-                                                onClick={() => syncPaymentStatus()}
-                                                className="shrink-0 rounded bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-700"
-                                            >
-                                                Cek Status
-                                            </button>
-                                        )}
                                     </div>
                                 </div>
                             )}
@@ -189,7 +180,7 @@ export default function OrderShow({ order }: { order: any }) {
                                     type="button"
                                     onClick={openPayment}
                                     disabled={paymentChecking}
-                                    className="mt-3 w-full rounded bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="btn-primary mt-3 w-full text-sm"
                                 >
                                     {paymentChecking ? 'Mengecek pembayaran...' : isMidtransPending ? 'Cek / Lanjutkan Pembayaran' : 'Bayar Sekarang'}
                                 </button>
@@ -229,7 +220,7 @@ export default function OrderShow({ order }: { order: any }) {
                         <tfoot>
                             <tr>
                                 <td colSpan={3} className="px-6 py-4 text-right font-bold text-gray-700">Total Amount</td>
-                                <td className="px-6 py-4 text-right font-bold text-xl text-blue-600">Rp {Number(order.total_amount).toLocaleString('id-ID')}</td>
+                                <td className="px-6 py-4 text-right font-bold text-xl text-cyan-600">Rp {Number(order.total_amount).toLocaleString('id-ID')}</td>
                             </tr>
                         </tfoot>
                     </table>

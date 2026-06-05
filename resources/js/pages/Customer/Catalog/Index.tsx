@@ -129,7 +129,7 @@ export default function CatalogIndex({ medicines, categories, filters }: { medic
                                         type="button"
                                         onMouseDown={(e) => e.preventDefault()}
                                         onClick={() => selectSuggestion(suggestion)}
-                                        className="block w-full border-b border-gray-100 px-3 py-2 text-left transition last:border-b-0 hover:bg-blue-50"
+                                        className="block w-full border-b border-gray-100 px-3 py-2 text-left transition last:border-b-0 hover:bg-cyan-50"
                                     >
                                         <div className="flex items-center justify-between gap-3">
                                             <div className="min-w-0">
@@ -137,7 +137,7 @@ export default function CatalogIndex({ medicines, categories, filters }: { medic
                                                 <div className="truncate text-xs text-gray-500">{suggestion.code} {suggestion.category ? `- ${suggestion.category}` : ''}</div>
                                             </div>
                                             <div className="shrink-0 text-right">
-                                                <div className="text-xs font-bold text-blue-600">Rp {Number(suggestion.price).toLocaleString('id-ID')}</div>
+                                                <div className="text-xs font-bold text-cyan-600">Rp {Number(suggestion.price).toLocaleString('id-ID')}</div>
                                                 <div className="text-[11px] text-gray-500">Stok {suggestion.stock}</div>
                                             </div>
                                         </div>
@@ -163,7 +163,7 @@ export default function CatalogIndex({ medicines, categories, filters }: { medic
                         <option value="">Semua Kategori</option>
                         {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
-                    <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md" disabled={isLoadingCatalog}>
+                    <button type="submit" className="btn-primary" disabled={isLoadingCatalog}>
                         {isLoadingCatalog ? 'Memuat...' : 'Search'}
                     </button>
                 </form>
@@ -182,7 +182,7 @@ export default function CatalogIndex({ medicines, categories, filters }: { medic
                         <div className="p-4 flex flex-col flex-1">
                             <h3 className="font-bold text-lg mb-1">{med.name}</h3>
                             <p className="text-sm text-gray-500 mb-2">{med.category?.name}</p>
-                            <div className="font-bold text-blue-600 mb-4">Rp {Number(med.price).toLocaleString('id-ID')}</div>
+                            <div className="font-bold text-cyan-600 mb-4">Rp {Number(med.price).toLocaleString('id-ID')}</div>
                             
                             <div className="text-sm font-semibold text-gray-700 mb-2">
                                 Stok: {med.batches_sum_remaining_quantity || 0}
@@ -195,7 +195,7 @@ export default function CatalogIndex({ medicines, categories, filters }: { medic
                             )}
 
                             <div className="mt-auto">
-                                <Link href={`/customer/catalog/${med.id}`} className="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-md transition">
+                                <Link href={`/customer/catalog/${med.id}`} className="btn-secondary w-full">
                                     Lihat Detail
                                 </Link>
                             </div>

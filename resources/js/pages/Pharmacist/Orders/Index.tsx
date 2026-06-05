@@ -127,7 +127,7 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
                         type="button"
                         onClick={bulkMarkReady}
                         disabled={selectedOrderIds.length === 0 || bulkLoading}
-                        className="rounded bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="btn-primary text-sm"
                     >
                         {bulkLoading ? 'Memproses...' : `Tandai Siap (${selectedOrderIds.length})`}
                     </button>
@@ -140,7 +140,7 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
                                 <th className="px-6 py-3 text-left">
                                     <input
                                         type="checkbox"
-                                        className="rounded border-gray-300 text-emerald-600"
+                                        className="rounded border-gray-300 text-cyan-600"
                                         checked={allProcessableSelected}
                                         onChange={toggleAllProcessable}
                                         disabled={processableOrders.length === 0 || bulkLoading}
@@ -160,7 +160,7 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
                                     <td className="px-6 py-4">
                                         <input
                                             type="checkbox"
-                                            className="rounded border-gray-300 text-emerald-600"
+                                            className="rounded border-gray-300 text-cyan-600"
                                             checked={selectedOrderIds.includes(order.id)}
                                             onChange={() => toggleOrder(order.id)}
                                             disabled={order.order_status !== 'processing' || bulkLoading || loadingOrderId === order.id}
@@ -194,7 +194,7 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
                                             <button
                                                 onClick={() => markReady(order.id)}
                                                 disabled={bulkLoading || loadingOrderId === order.id}
-                                                className="text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded font-bold disabled:cursor-not-allowed disabled:opacity-60"
+                                                className="btn-primary text-sm"
                                             >
                                                 {loadingOrderId === order.id ? 'Memproses...' : 'Tandai Siap Diambil/Dikirim'}
                                             </button>
@@ -225,7 +225,7 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
                                 type="button"
                                 onClick={closeDialog}
                                 disabled={dialogLoading}
-                                className="rounded border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="btn-secondary text-sm"
                             >
                                 Batal
                             </button>
@@ -233,9 +233,9 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
                                 type="button"
                                 onClick={approveDialogAction}
                                 disabled={dialogLoading}
-                                className="inline-flex items-center gap-2 rounded bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="btn-primary gap-2 text-sm"
                             >
-                                {dialogLoading && <span className="h-3 w-3 animate-spin rounded-full border-2 border-emerald-200 border-t-white" />}
+                                {dialogLoading && <span className="h-3 w-3 animate-spin rounded-full border-2 border-cyan-200 border-t-white" />}
                                 {dialogLoading ? 'Memproses...' : dialog.confirmLabel}
                             </button>
                         </div>

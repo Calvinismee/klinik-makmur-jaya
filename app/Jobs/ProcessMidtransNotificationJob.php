@@ -17,8 +17,7 @@ class ProcessMidtransNotificationJob implements ShouldQueue
     public function __construct(
         private string $orderNumber,
         private array $payload
-    ) {
-    }
+    ) {}
 
     public function handle(OrderService $orderService): void
     {

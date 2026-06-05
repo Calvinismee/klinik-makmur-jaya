@@ -11,6 +11,7 @@ use Inertia\Inertia;
 class CartController extends Controller
 {
     protected $cartService;
+
     protected $stockService;
 
     public function __construct(CartService $cartService, StockService $stockService)
@@ -45,10 +46,10 @@ class CartController extends Controller
         ]);
 
         $availableStock = $this->stockService->getTotalStock($request->medicine_id);
-        
+
         $currentCart = $this->cartService->getCart();
         $currentQty = isset($currentCart[$request->medicine_id]) ? $currentCart[$request->medicine_id]['quantity'] : 0;
-        
+
         if ($availableStock < ($currentQty + $request->quantity)) {
             return back()->withErrors(['message' => 'Insufficient stock.']);
         }

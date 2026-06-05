@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useForm, router } from '@inertiajs/react';
 import AppLayout from '../../../Layouts/AppLayout';
+import FileUploadField from '../../../components/FileUploadField';
 import { decimalOnly, digitsOnly, preventNonNumericKey } from '../../../utils/numericInput';
 
 export default function MedicinesIndex({ medicines, categories, suppliers }: { medicines: any[], categories: any[], suppliers: any[] }) {
@@ -21,6 +22,7 @@ export default function MedicinesIndex({ medicines, categories, suppliers }: { m
         image: null as File | null,
         _method: 'post',
     });
+    const editingMedicine = editingId ? medicines.find((medicine) => medicine.id === editingId) : null;
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -66,30 +68,30 @@ export default function MedicinesIndex({ medicines, categories, suppliers }: { m
         }
     };
 
-    const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length > 0) {
-            if (confirm('Are you sure you want to import this file?')) {
-                const formData = new FormData();
-                formData.append('file', e.target.files[0]);
-                
-                router.post('/admin/medicines/import', formData, {
-                    preserveScroll: true,
-                });
-            }
-        }
-    };
-
     return (
         <AppLayout title="Kelola Obat">
             <div className="bg-white p-6 rounded-lg shadow-sm mb-6 flex justify-between items-center">
                 <h2 className="text-lg font-bold">Katalog Obat</h2>
-                <div className="flex gap-4 items-center">
-                    <div>
-                        <label htmlFor="import-excel" className="bg-green-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-green-700 font-bold transition">
-                            Import Excel/CSV
-                        </label>
-                        <input id="import-excel" type="file" accept=".csv, .xls, .xlsx" className="hidden" onChange={handleImport} />
-                    </div>
+                <div className="flex items-center">
+                    <FileUploadField
+                        label="Import Data"
+                        accept=".csv,.xls,.xlsx"
+                        buttonText="Import Excel/CSV"
+                        helper="CSV, XLS, atau XLSX"
+                        compact
+                        onFileChange={(file) => {
+                            if (!file) {
+                                return;
+                            }
+
+                            const formData = new FormData();
+                            formData.append('file', file);
+
+                            router.post('/admin/medicines/import', formData, {
+                                preserveScroll: true,
+                            });
+                        }}
+                    />
                 </div>
             </div>
 
@@ -128,9 +130,19 @@ export default function MedicinesIndex({ medicines, categories, suppliers }: { m
                         <label className="block text-sm font-medium text-gray-700">Min. Stok</label>
                         <input type="text" inputMode="numeric" className="mt-1 block w-full rounded-md border p-2" value={data.minimum_stock} onKeyDown={preventNonNumericKey} onChange={e => setData('minimum_stock', digitsOnly(e.target.value))} required />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Gambar</label>
-                        <input type="file" className="mt-1 block w-full text-sm text-gray-500" onChange={e => setData('image', e.target.files?.[0] || null)} />
+                    <div className="lg:col-span-2">
+                        <FileUploadField
+                            label="Gambar"
+                            accept="image/*"
+                            buttonText="Pilih gambar obat"
+                            helper="Gunakan JPG, PNG, atau WEBP. Preview akan muncul setelah dipilih."
+                            previewImage
+                            selectedFile={data.image}
+                            currentImageUrl={editingMedicine?.image ? `/storage/${editingMedicine.image}` : null}
+                            currentImageAlt={editingMedicine?.name || 'Preview gambar obat'}
+                            error={errors.image}
+                            onFileChange={(file) => setData('image', file)}
+                        />
                     </div>
                     <div className="flex items-center gap-4 mt-6">
                         <label className="flex items-center">
@@ -143,11 +155,11 @@ export default function MedicinesIndex({ medicines, categories, suppliers }: { m
                         </label>
                     </div>
                     <div className="lg:col-span-3 flex gap-2">
-                        <button type="submit" disabled={processing} className="bg-blue-600 text-white px-4 py-2 rounded">
+                        <button type="submit" disabled={processing} className="btn-primary">
                             {editingId ? 'Update' : 'Simpan'}
                         </button>
                         {editingId && (
-                            <button type="button" onClick={() => { setEditingId(null); reset(); }} className="bg-gray-400 text-white px-4 py-2 rounded">
+                            <button type="button" onClick={() => { setEditingId(null); reset(); }} className="btn-secondary">
                                 Batal
                             </button>
                         )}
@@ -190,7 +202,7 @@ export default function MedicinesIndex({ medicines, categories, suppliers }: { m
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button onClick={() => edit(med)} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
+                                    <button onClick={() => edit(med)} className="text-cyan-600 hover:text-cyan-800 mr-4">Edit</button>
                                     <button onClick={() => handleDelete(med.id)} className="text-red-600 hover:text-red-900">Hapus</button>
                                 </td>
                             </tr>

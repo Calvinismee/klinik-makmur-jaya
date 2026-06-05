@@ -11,20 +11,19 @@ class MidtransWebhookController extends Controller
 {
     public function __construct(
         private MidtransPaymentService $midtransPaymentService
-    ) {
-    }
+    ) {}
 
     public function handle(Request $request)
     {
         $payload = $request->all();
 
-        if (!$this->midtransPaymentService->validSignature($payload)) {
+        if (! $this->midtransPaymentService->validSignature($payload)) {
             return response()->json(['message' => 'Invalid signature.'], Response::HTTP_FORBIDDEN);
         }
 
         $orderId = $payload['order_id'] ?? null;
 
-        if (!$orderId) {
+        if (! $orderId) {
             return response()->json(['message' => 'Missing order_id.'], Response::HTTP_BAD_REQUEST);
         }
 

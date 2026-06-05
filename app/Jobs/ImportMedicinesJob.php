@@ -22,8 +22,7 @@ class ImportMedicinesJob implements ShouldQueue
     public function __construct(
         private string $path,
         private int $userId
-    ) {
-    }
+    ) {}
 
     public function handle(): void
     {
@@ -57,7 +56,7 @@ class ImportMedicinesJob implements ShouldQueue
                     $user,
                     new SystemJobStatusNotification(
                         'Import obat gagal',
-                        'File obat gagal diproses: ' . $exception->getMessage(),
+                        'File obat gagal diproses: '.$exception->getMessage(),
                         'critical',
                         '/admin/medicines',
                         "medicine_import:{$this->path}:failed"

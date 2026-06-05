@@ -93,7 +93,7 @@ export default function PrescriptionsIndex({ orders }: { orders: any[] }) {
                                                     <div className="flex gap-2">
                                                         <button 
                                                             onClick={() => handleVerify(order.id, 'rejected')}
-                                                            className="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700"
+                                                            className="btn-danger flex-1 px-3 py-2 text-sm"
                                                         >
                                                             Confirm Tolak
                                                         </button>
@@ -102,7 +102,7 @@ export default function PrescriptionsIndex({ orders }: { orders: any[] }) {
                                                                 setVerifyingId(null);
                                                                 setReasonError('');
                                                             }}
-                                                            className="flex-1 bg-gray-200 text-gray-800 px-3 py-2 rounded text-sm hover:bg-gray-300"
+                                                            className="btn-secondary flex-1 px-3 py-2 text-sm"
                                                         >
                                                             Batal
                                                         </button>
@@ -112,13 +112,13 @@ export default function PrescriptionsIndex({ orders }: { orders: any[] }) {
                                                 <div className="flex flex-col gap-3">
                                                     <button 
                                                         onClick={() => handleVerify(order.id, 'approved')}
-                                                        className="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700"
+                                                        className="btn-primary w-full"
                                                     >
                                                         Setujui Resep
                                                     </button>
                                                     <button 
                                                         onClick={() => setVerifyingId(order.id)}
-                                                        className="w-full bg-red-600 text-white font-bold py-2 rounded hover:bg-red-700"
+                                                        className="btn-danger w-full"
                                                     >
                                                         Tolak Resep
                                                     </button>

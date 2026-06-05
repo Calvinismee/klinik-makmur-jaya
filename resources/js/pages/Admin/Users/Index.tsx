@@ -34,7 +34,7 @@ export default function UsersIndex({ users, roles }: { users: any[], roles: any[
         ? passwordIsStrong
             ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
             : 'border-red-300 focus:border-red-500 focus:ring-red-500'
-        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500';
+        : 'border-gray-300 focus:border-cyan-500 focus:ring-cyan-500';
     const canSubmit = !processing && (editingId ? !passwordStarted || passwordIsStrong : passwordIsStrong);
 
     const submit = (e: React.FormEvent) => {
@@ -111,11 +111,11 @@ export default function UsersIndex({ users, roles }: { users: any[], roles: any[
                     </div>
                     
                     <div className="md:col-span-2 flex gap-2">
-                        <button type="submit" disabled={!canSubmit} className="bg-blue-600 text-white px-4 py-2 rounded disabled:cursor-not-allowed disabled:opacity-50">
+                        <button type="submit" disabled={!canSubmit} className="btn-primary">
                             {editingId ? 'Update' : 'Simpan'}
                         </button>
                         {editingId && (
-                            <button type="button" onClick={() => { setEditingId(null); reset(); }} className="bg-gray-400 text-white px-4 py-2 rounded">
+                            <button type="button" onClick={() => { setEditingId(null); reset(); }} className="btn-secondary">
                                 Batal
                             </button>
                         )}
@@ -144,7 +144,7 @@ export default function UsersIndex({ users, roles }: { users: any[], roles: any[
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button onClick={() => edit(user)} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
+                                    <button onClick={() => edit(user)} className="text-cyan-600 hover:text-cyan-800 mr-4">Edit</button>
                                     <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:text-red-900">Hapus</button>
                                 </td>
                             </tr>

@@ -4,6 +4,13 @@ import { useEffect, useState } from 'react';
 
 export default function AdminOrdersIndex({ orders, reportJobs = [] }: { orders: any[], reportJobs?: any[] }) {
     const [jobs, setJobs] = useState<any[]>(reportJobs);
+    const [showReportProgress, setShowReportProgress] = useState(() => {
+        if (typeof window === 'undefined') {
+            return true;
+        }
+
+        return window.localStorage.getItem('admin-report-progress-hidden') !== '1';
+    });
 
     useEffect(() => {
         setJobs(reportJobs);
@@ -95,6 +102,13 @@ export default function AdminOrdersIndex({ orders, reportJobs = [] }: { orders: 
         }
     };
     const getJobTypeLabel = (type: string) => type === 'sales_excel' ? 'Laporan Penjualan Excel' : 'Laporan Penjualan PDF';
+    const setReportProgressVisibility = (visible: boolean) => {
+        setShowReportProgress(visible);
+
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem('admin-report-progress-hidden', visible ? '0' : '1');
+        }
+    };
 
     return (
         <AppLayout title="Semua Pesanan">
@@ -105,34 +119,52 @@ export default function AdminOrdersIndex({ orders, reportJobs = [] }: { orders: 
                         <button
                             type="button"
                             onClick={() => router.post('/admin/orders/export/excel/background', {}, { preserveScroll: true })}
-                            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition"
+                            className="btn-primary"
                         >
                             Generate Excel
                         </button>
                         <button
                             type="button"
                             onClick={() => router.post('/admin/orders/export/pdf/background', {}, { preserveScroll: true })}
-                            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition"
+                            className="btn-primary"
                         >
                             Generate PDF
                         </button>
+                        {!showReportProgress && jobs.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setReportProgressVisibility(true)}
+                                className="btn-secondary"
+                            >
+                                Tampilkan Progress
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                {jobs.length > 0 && (
+                {showReportProgress && jobs.length > 0 && (
                     <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
                         <div className="flex items-center justify-between gap-3">
                             <div>
                                 <h2 className="text-sm font-bold text-slate-900">Progress Laporan Background</h2>
                                 <p className="mt-0.5 text-xs text-slate-500">Progress diperbarui otomatis selama queue worker berjalan.</p>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => router.reload({ only: ['reportJobs'], preserveScroll: true })}
-                                className="rounded border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-white"
-                            >
-                                Refresh
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => router.reload({ only: ['reportJobs'], preserveScroll: true })}
+                                    className="btn-secondary px-3 py-1 text-xs"
+                                >
+                                    Refresh
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setReportProgressVisibility(false)}
+                                    className="btn-secondary px-3 py-1 text-xs"
+                                >
+                                    Sembunyikan
+                                </button>
+                            </div>
                         </div>
                         <div className="mt-4 space-y-3">
                             {jobs.map((job) => (
@@ -147,7 +179,7 @@ export default function AdminOrdersIndex({ orders, reportJobs = [] }: { orders: 
                                                 {getJobStatusLabel(job.status)}
                                             </span>
                                             {job.download_url && (
-                                                <a href={job.download_url} target="_blank" rel="noreferrer" className="rounded bg-blue-600 px-3 py-1 text-xs font-bold text-white transition hover:bg-blue-700">
+                                                <a href={job.download_url} target="_blank" rel="noreferrer" className="btn-primary px-3 py-1 text-xs">
                                                     Download
                                                 </a>
                                             )}
@@ -156,7 +188,7 @@ export default function AdminOrdersIndex({ orders, reportJobs = [] }: { orders: 
                                     <div className="mt-3 flex items-center gap-3">
                                         <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
                                             <div
-                                                className={`h-full rounded-full transition-all duration-300 ${job.status === 'failed' ? 'bg-red-500' : 'bg-blue-600'}`}
+                                                className={`h-full rounded-full transition-all duration-300 ${job.status === 'failed' ? 'bg-red-500' : 'bg-cyan-500'}`}
                                                 style={{ width: `${Math.max(0, Math.min(Number(job.progress || 0), 100))}%` }}
                                             ></div>
                                         </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\OrdersExport;
 use App\Http\Controllers\Controller;
 use App\Jobs\GenerateSalesReportExcelJob;
 use App\Jobs\GenerateSalesReportPdfJob;
@@ -11,9 +12,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\OrdersExport;
 
 class OrderController extends Controller
 {

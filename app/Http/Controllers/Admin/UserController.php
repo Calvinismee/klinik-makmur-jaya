@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -47,18 +47,18 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'password' => ['nullable', 'string', Password::min(8)->mixedCase()->numbers()->symbols()],
             'role' => 'required|exists:roles,name',
         ]);
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
-        
-        if (!empty($validated['password'])) {
+
+        if (! empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
         }
-        
+
         $user->save();
         $user->syncRoles([$validated['role']]);
 
@@ -70,8 +70,9 @@ class UserController extends Controller
         if ($user->id === auth()->id()) {
             return back()->withErrors(['message' => 'You cannot delete yourself.']);
         }
-        
+
         $user->delete();
+
         return back()->with('success', 'User deleted successfully.');
     }
 }

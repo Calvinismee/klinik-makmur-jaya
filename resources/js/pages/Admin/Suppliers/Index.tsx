@@ -68,11 +68,11 @@ export default function SuppliersIndex({ suppliers }: { suppliers: any[] }) {
                         <textarea className="mt-1 block w-full rounded-md border p-2" value={data.address} onChange={e => setData('address', e.target.value)} />
                     </div>
                     <div className="md:col-span-2 flex gap-2">
-                        <button type="submit" disabled={processing} className="bg-blue-600 text-white px-4 py-2 rounded">
+                        <button type="submit" disabled={processing} className="btn-primary">
                             {editingId ? 'Update' : 'Simpan'}
                         </button>
                         {editingId && (
-                            <button type="button" onClick={() => { setEditingId(null); reset(); }} className="bg-gray-400 text-white px-4 py-2 rounded">
+                            <button type="button" onClick={() => { setEditingId(null); reset(); }} className="btn-secondary">
                                 Batal
                             </button>
                         )}
@@ -100,7 +100,7 @@ export default function SuppliersIndex({ suppliers }: { suppliers: any[] }) {
                                 </td>
                                 <td className="px-6 py-4">{supplier.address}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button onClick={() => edit(supplier)} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
+                                    <button onClick={() => edit(supplier)} className="text-cyan-600 hover:text-cyan-800 mr-4">Edit</button>
                                     <button onClick={() => handleDelete(supplier.id)} className="text-red-600 hover:text-red-900">Hapus</button>
                                 </td>
                             </tr>

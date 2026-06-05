@@ -33,7 +33,7 @@ class ReportJob extends Model
 
     public function downloadUrl(): ?string
     {
-        if ($this->status !== 'completed' || !$this->file_name) {
+        if ($this->status !== 'completed' || ! $this->file_name) {
             return null;
         }
 

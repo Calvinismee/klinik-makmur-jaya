@@ -6,15 +6,15 @@ use App\Jobs\CheckCriticalStockJob;
 use App\Models\Medicine;
 use App\Models\MedicineBatch;
 use App\Models\StockMovement;
-use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class StockService
 {
     /**
      * Add new stock batch.
      */
-    public function addBatch(array $data, int $userId = null)
+    public function addBatch(array $data, ?int $userId = null)
     {
         $batch = DB::transaction(function () use ($data, $userId) {
             $batch = MedicineBatch::create([
@@ -48,7 +48,7 @@ class StockService
     /**
      * Deduct stock using FIFO logic based on expired_at ascending.
      */
-    public function deductStock(int $medicineId, int $quantityToDeduct, string $referenceType, int $referenceId, string $notes = '', int $userId = null)
+    public function deductStock(int $medicineId, int $quantityToDeduct, string $referenceType, int $referenceId, string $notes = '', ?int $userId = null)
     {
         $result = DB::transaction(function () use ($medicineId, $quantityToDeduct, $referenceType, $referenceId, $notes, $userId) {
             $remainingToDeduct = $quantityToDeduct;
@@ -72,7 +72,7 @@ class StockService
                 }
 
                 $deductFromBatch = min($batch->remaining_quantity, $remainingToDeduct);
-                
+
                 $batch->remaining_quantity -= $deductFromBatch;
                 $batch->save();
 

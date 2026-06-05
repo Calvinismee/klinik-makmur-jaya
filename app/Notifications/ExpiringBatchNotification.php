@@ -10,9 +10,10 @@ use Illuminate\Notifications\Notification;
 
 class ExpiringBatchNotification extends Notification
 {
-    use Queueable, ChoosesNotificationChannels;
+    use ChoosesNotificationChannels, Queueable;
 
     protected $batch;
+
     protected int $daysBefore;
 
     public function __construct(MedicineBatch $batch, int $daysBefore = 30)

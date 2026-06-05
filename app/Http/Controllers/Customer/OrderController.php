@@ -45,7 +45,7 @@ class OrderController extends Controller
 
                 return redirect()
                     ->route('customer.orders.show', ['order' => $order->order_number])
-                    ->with('success', 'Midtrans masih memproses pembayaran. Silakan cek kembali beberapa saat lagi.');
+                    ->with('info', 'Pembayaran belum berhasil diverifikasi. Pesanan tetap menunggu pembayaran.');
             } catch (\Exception $e) {
                 return redirect()
                     ->route('customer.orders.show', ['order' => $order->order_number])
@@ -71,7 +71,7 @@ class OrderController extends Controller
 
             return redirect()
                 ->route('customer.orders.show', ['order' => $order->order_number, 'pay' => 1])
-                ->with('success', 'Silakan lanjutkan pembayaran.');
+                ->with('info', 'Silakan lanjutkan pembayaran.');
         } catch (\Exception $e) {
             return back()->withErrors(['message' => $e->getMessage()]);
         }

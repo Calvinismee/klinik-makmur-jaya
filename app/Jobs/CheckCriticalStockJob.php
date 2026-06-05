@@ -2,15 +2,15 @@
 
 namespace App\Jobs;
 
+use App\Models\Medicine;
+use App\Models\User;
+use App\Notifications\CriticalStockNotification;
+use App\Services\NotificationDispatchService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Medicine;
-use App\Models\User;
-use App\Notifications\CriticalStockNotification;
-use App\Services\NotificationDispatchService;
 
 class CheckCriticalStockJob implements ShouldQueue
 {

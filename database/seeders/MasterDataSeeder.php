@@ -2,14 +2,14 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Category;
-use App\Models\Supplier;
 use App\Models\Medicine;
 use App\Models\MedicineBatch;
 use App\Models\StockMovement;
+use App\Models\Supplier;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class MasterDataSeeder extends Seeder
 {
@@ -33,13 +33,13 @@ class MasterDataSeeder extends Seeder
                 'name' => 'PT. Kimia Farma Trading',
                 'phone' => '081234567890',
                 'address' => 'Jl. Kebon Jeruk No. 12, Jakarta',
-                'email' => 'sales@kimiafarma.test'
+                'email' => 'sales@kimiafarma.test',
             ],
             [
                 'name' => 'PT. Dexa Medica',
                 'phone' => '089876543210',
                 'address' => 'Jl. Merdeka No. 45, Bandung',
-                'email' => 'info@dexamedica.test'
+                'email' => 'info@dexamedica.test',
             ],
         ];
 
@@ -51,7 +51,7 @@ class MasterDataSeeder extends Seeder
         $analgesik = Category::where('name', 'Analgesik')->first();
         $antibiotik = Category::where('name', 'Antibiotik')->first();
         $vitamin = Category::where('name', 'Vitamin')->first();
-        
+
         $supplier1 = Supplier::where('name', 'PT. Kimia Farma Trading')->first();
         $supplier2 = Supplier::where('name', 'PT. Dexa Medica')->first();
 
@@ -109,7 +109,7 @@ class MasterDataSeeder extends Seeder
 
         // 4. Batches & Stock
         $apoteker = User::role('apoteker')->first();
-        
+
         $med1 = Medicine::where('code', 'MED-001')->first();
         $med2 = Medicine::where('code', 'MED-002')->first();
         $med3 = Medicine::where('code', 'MED-003')->first();
@@ -136,7 +136,7 @@ class MasterDataSeeder extends Seeder
                 'batch_number' => 'BATCH-C001',
                 'quantity' => 200,
                 'remaining_quantity' => 200,
-                'expired_at' => Carbon::now()->addDays(15), 
+                'expired_at' => Carbon::now()->addDays(15),
             ],
             // Low stock batch (< 20)
             [
@@ -150,7 +150,7 @@ class MasterDataSeeder extends Seeder
 
         foreach ($batches as $batch) {
             $createdBatch = MedicineBatch::firstOrCreate(
-                ['batch_number' => $batch['batch_number']], 
+                ['batch_number' => $batch['batch_number']],
                 $batch
             );
 

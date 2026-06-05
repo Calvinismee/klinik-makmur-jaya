@@ -12,7 +12,9 @@ use Inertia\Inertia;
 class CheckoutController extends Controller
 {
     protected $cartService;
+
     protected $checkoutService;
+
     protected $midtransPaymentService;
 
     public function __construct(CartService $cartService, CheckoutService $checkoutService, MidtransPaymentService $midtransPaymentService)
@@ -79,7 +81,7 @@ class CheckoutController extends Controller
 
                 return redirect()
                     ->route('customer.orders.show', ['order' => $order->order_number, 'pay' => 1])
-                    ->with('success', 'Pesanan dibuat. Silakan lanjutkan pembayaran.');
+                    ->with('info', 'Pesanan dibuat. Silakan lanjutkan pembayaran.');
             }
 
             return redirect()->route('customer.orders.show', ['order' => $order->order_number])->with('success', 'Order created successfully.');

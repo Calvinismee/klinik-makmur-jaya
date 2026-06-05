@@ -19,6 +19,7 @@ class GenerateSalesReportPdfJob implements ShouldQueue
     use Queueable;
 
     public int $tries = 2;
+
     private int $reportJobId;
 
     public function __construct(int $reportJobId)
@@ -30,7 +31,7 @@ class GenerateSalesReportPdfJob implements ShouldQueue
     {
         $reportJobId = $this->reportJobId ?? null;
 
-        if (!$reportJobId) {
+        if (! $reportJobId) {
             $reportJob = ReportJob::create([
                 'user_id' => auth()->id() ?? User::role('admin')->value('id') ?? User::value('id'),
                 'type' => 'sales_pdf',
@@ -43,7 +44,7 @@ class GenerateSalesReportPdfJob implements ShouldQueue
             $reportJob = ReportJob::findOrFail($reportJobId);
         }
         $user = User::find($reportJob->user_id);
-        $filename = 'sales-report-' . now()->format('Ymd-His') . '-' . $reportJob->user_id . '.pdf';
+        $filename = 'sales-report-'.now()->format('Ymd-His').'-'.$reportJob->user_id.'.pdf';
         $path = "reports/{$filename}";
 
         try {
@@ -81,7 +82,7 @@ class GenerateSalesReportPdfJob implements ShouldQueue
                 );
             }
         } catch (Throwable $exception) {
-            $this->updateProgress($reportJob, 'failed', 100, 'Gagal membuat laporan: ' . $exception->getMessage(), [
+            $this->updateProgress($reportJob, 'failed', 100, 'Gagal membuat laporan: '.$exception->getMessage(), [
                 'finished_at' => now(),
             ]);
 
@@ -92,7 +93,7 @@ class GenerateSalesReportPdfJob implements ShouldQueue
                     $user,
                     new SystemJobStatusNotification(
                         'Generate laporan PDF gagal',
-                        'Sistem gagal membuat laporan PDF: ' . $exception->getMessage(),
+                        'Sistem gagal membuat laporan PDF: '.$exception->getMessage(),
                         'critical',
                         '/admin/orders',
                         "sales_report_pdf:failed:{$reportJob->id}"
@@ -139,12 +140,11 @@ class GenerateSalesReportPdfJob implements ShouldQueue
             'summary' => [
                 'total_sales' => $orders->sum('total_amount'),
                 'total_orders' => $orders->count(),
-                'online_orders' => $orders->filter(fn (Order $order) => !str_starts_with($order->order_number, 'POS-'))->count(),
+                'online_orders' => $orders->filter(fn (Order $order) => ! str_starts_with($order->order_number, 'POS-'))->count(),
                 'offline_orders' => $orders->filter(fn (Order $order) => str_starts_with($order->order_number, 'POS-'))->count(),
             ],
             'dailySales' => $dailySales,
             'maxDailySales' => $maxDailySales,
         ];
     }
-
 }

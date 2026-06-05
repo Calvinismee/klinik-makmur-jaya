@@ -6,8 +6,8 @@ use App\Models\Order;
 use App\Models\User;
 use App\Notifications\NewProcessingOrderNotification;
 use App\Notifications\OrderStatusNotification;
-use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class OrderService
 {
@@ -18,27 +18,28 @@ class OrderService
         $this->stockService = $stockService;
     }
 
-    public function verifyPrescription(int $orderId, string $status, string $reason = null)
+    public function verifyPrescription(int $orderId, string $status, ?string $reason = null)
     {
         $order = Order::findOrFail($orderId);
 
         if ($order->prescription_status !== 'pending') {
-            throw new Exception("Prescription is not in pending state.");
+            throw new Exception('Prescription is not in pending state.');
         }
 
         return DB::transaction(function () use ($order, $status, $reason) {
             $order->prescription_status = $status;
-            
+
             if ($status === 'approved') {
                 $order->order_status = 'waiting_payment';
             } elseif ($status === 'rejected') {
                 $order->order_status = 'prescription_rejected';
-                $order->notes = $order->notes ? $order->notes . "\nRejection Reason: " . $reason : "Rejection Reason: " . $reason;
+                $order->notes = $order->notes ? $order->notes."\nRejection Reason: ".$reason : 'Rejection Reason: '.$reason;
             }
 
             $order->save();
             $this->markPrescriptionVerificationNotificationsRead($order);
             $this->notifyCustomer($order);
+
             return $order;
         });
     }
@@ -48,11 +49,11 @@ class OrderService
         $order = Order::with('items')->findOrFail($orderId);
 
         if ($order->payment_status !== 'paid') {
-            throw new Exception("Order must be paid before it can be processed.");
+            throw new Exception('Order must be paid before it can be processed.');
         }
 
-        if (!in_array($order->order_status, ['waiting_payment', 'paid'])) {
-            throw new Exception("Order cannot be processed from current state.");
+        if (! in_array($order->order_status, ['waiting_payment', 'paid'])) {
+            throw new Exception('Order cannot be processed from current state.');
         }
 
         return DB::transaction(function () use ($order) {
@@ -84,11 +85,11 @@ class OrderService
             $order->load('items');
 
             if ($order->payment_status === 'paid') {
-                throw new Exception("Order is already paid.");
+                throw new Exception('Order is already paid.');
             }
 
             if ($order->order_status !== 'waiting_payment') {
-                throw new Exception("Order cannot be paid from current state.");
+                throw new Exception('Order cannot be paid from current state.');
             }
 
             foreach ($order->items as $item) {
@@ -124,7 +125,7 @@ class OrderService
             $statusCode = (string) ($payload['status_code'] ?? '');
 
             if (($payload['order_id'] ?? $orderNumber) !== $orderNumber) {
-                throw new Exception("Midtrans order ID does not match order number.");
+                throw new Exception('Midtrans order ID does not match order number.');
             }
 
             $order->forceFill([
@@ -137,11 +138,11 @@ class OrderService
 
             if ($this->isMidtransPaid($transactionStatus, $fraudStatus) && ($statusCode === '' || $statusCode === '200')) {
                 if ($order->order_status !== 'waiting_payment' && $order->payment_status !== 'paid') {
-                    throw new Exception("Order cannot be paid from current state.");
+                    throw new Exception('Order cannot be paid from current state.');
                 }
 
-                if (!$this->grossAmountMatches($order, $payload['gross_amount'] ?? null)) {
-                    throw new Exception("Midtrans gross amount does not match order total.");
+                if (! $this->grossAmountMatches($order, $payload['gross_amount'] ?? null)) {
+                    throw new Exception('Midtrans gross amount does not match order total.');
                 }
 
                 $isNewPayment = $order->payment_status !== 'paid';
@@ -208,7 +209,7 @@ class OrderService
         $order = Order::findOrFail($orderId);
 
         if ($order->order_status !== 'ready_to_pickup') {
-            throw new Exception("Order must be ready before it can be completed.");
+            throw new Exception('Order must be ready before it can be completed.');
         }
 
         $order->order_status = 'completed';
@@ -223,11 +224,11 @@ class OrderService
         $order = Order::findOrFail($orderId);
 
         if ($order->payment_status !== 'paid') {
-            throw new Exception("Order must be paid before it can be marked ready.");
+            throw new Exception('Order must be paid before it can be marked ready.');
         }
 
         if ($order->order_status !== 'processing') {
-            throw new Exception("Order must be processing before it can be marked ready.");
+            throw new Exception('Order must be processing before it can be marked ready.');
         }
 
         $order->order_status = 'ready_to_pickup';
@@ -242,7 +243,7 @@ class OrderService
         $order = Order::findOrFail($orderId);
 
         if (in_array($order->order_status, ['completed', 'cancelled'])) {
-            throw new Exception("Order is already completed or cancelled.");
+            throw new Exception('Order is already completed or cancelled.');
         }
 
         $order->order_status = 'cancelled';
@@ -256,7 +257,7 @@ class OrderService
     {
         $order->loadMissing('user');
 
-        if (!$order->user || !$order->user->hasRole('pasien')) {
+        if (! $order->user || ! $order->user->hasRole('pasien')) {
             return;
         }
 
@@ -271,7 +272,7 @@ class OrderService
 
     private function notifyPharmacistsProcessingOrder(Order $order): void
     {
-        if (!str_starts_with($order->order_number, 'ORD-') || $order->order_status !== 'processing') {
+        if (! str_starts_with($order->order_number, 'ORD-') || $order->order_status !== 'processing') {
             return;
         }
 
@@ -287,7 +288,7 @@ class OrderService
     private function markPrescriptionVerificationNotificationsRead(Order $order): void
     {
         DB::table('notifications')
-            ->where('data', 'like', '%"dedupe_key":"prescription_verification:' . $order->id . '"%')
+            ->where('data', 'like', '%"dedupe_key":"prescription_verification:'.$order->id.'"%')
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
     }
@@ -296,8 +297,8 @@ class OrderService
     {
         return match ($order->order_status) {
             'waiting_payment' => [
-                'Dikonfirmasi',
-                "Pesanan #{$order->order_number} sudah dikonfirmasi. Silakan lanjutkan pembayaran.",
+                'Menunggu Pembayaran',
+                "Pesanan #{$order->order_number} menunggu pembayaran. Silakan lanjutkan pembayaran.",
             ],
             'processing' => [
                 'Diproses',

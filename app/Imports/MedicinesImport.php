@@ -2,15 +2,15 @@
 
 namespace App\Imports;
 
-use App\Models\Medicine;
 use App\Models\Category;
+use App\Models\Medicine;
 use App\Models\Supplier;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class MedicinesImport implements ToModel, WithHeadingRow, WithChunkReading
+class MedicinesImport implements ToModel, WithChunkReading, WithHeadingRow
 {
     public function model(array $row)
     {
@@ -22,7 +22,7 @@ class MedicinesImport implements ToModel, WithHeadingRow, WithChunkReading
 
         $code = trim((string) ($row['code'] ?? $row['kode'] ?? ''));
         if ($code === '') {
-            $code = 'MED-' . strtoupper(Str::random(6));
+            $code = 'MED-'.strtoupper(Str::random(6));
         }
 
         if (Medicine::where('code', $code)->exists()) {

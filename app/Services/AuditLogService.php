@@ -11,7 +11,7 @@ use Throwable;
 
 class AuditLogService
 {
-    public static function log(string $action, string $module, string $description = null, ?int $userId = null)
+    public static function log(string $action, string $module, ?string $description = null, ?int $userId = null)
     {
         try {
             AuditLog::create([
@@ -24,7 +24,7 @@ class AuditLogService
             ]);
         } catch (\Exception $e) {
             // Silently fail if log fails so it doesn't break the app, or log to file
-            \Log::error('Failed to write audit log: ' . $e->getMessage());
+            \Log::error('Failed to write audit log: '.$e->getMessage());
         }
     }
 
@@ -37,7 +37,7 @@ class AuditLogService
                 'file' => $exception->getFile(),
                 'line' => (string) $exception->getLine(),
                 'trace_summary' => collect($exception->getTrace())->take(5)->map(function (array $trace) {
-                    return ($trace['file'] ?? 'unknown') . ':' . ($trace['line'] ?? '-') . ' ' . ($trace['function'] ?? '');
+                    return ($trace['file'] ?? 'unknown').':'.($trace['line'] ?? '-').' '.($trace['function'] ?? '');
                 })->implode("\n"),
                 'user_id' => auth()->id(),
                 'url' => request()?->fullUrl(),
@@ -50,7 +50,7 @@ class AuditLogService
 
             return $errorLog;
         } catch (Throwable $loggingException) {
-            \Log::error('Failed to write application error log: ' . $loggingException->getMessage());
+            \Log::error('Failed to write application error log: '.$loggingException->getMessage());
 
             return null;
         }

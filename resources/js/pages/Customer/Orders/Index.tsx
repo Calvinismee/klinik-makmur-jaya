@@ -17,7 +17,7 @@ export default function OrdersIndex({ orders }: { orders: any[] }) {
 
     const formatStatus = (status: string) => {
         const map: Record<string, string> = {
-            waiting_payment: 'Dikonfirmasi',
+            waiting_payment: 'Menunggu Pembayaran',
             waiting_prescription_verification: 'Verifikasi Resep',
             prescription_rejected: 'Prescription ditolak',
             paid: 'Sudah Dibayar',
@@ -38,7 +38,7 @@ export default function OrdersIndex({ orders }: { orders: any[] }) {
                 {orders.length === 0 ? (
                     <div className="text-center py-12 text-gray-500">
                         Belum ada pesanan<br/>
-                        <Link href="/customer/catalog" className="text-blue-600 hover:underline mt-2 inline-block">Lihat Katalog</Link>
+                        <Link href="/customer/catalog" className="mt-2 inline-block text-cyan-600 hover:underline">Lihat Katalog</Link>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
@@ -55,7 +55,7 @@ export default function OrdersIndex({ orders }: { orders: any[] }) {
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {orders.map((order) => (
                                     <tr key={order.id}>
-                                        <td className="px-6 py-4 whitespace-nowrap font-medium text-blue-600">
+                                        <td className="px-6 py-4 whitespace-nowrap font-medium text-cyan-600">
                                             <Link href={`/customer/orders/${order.order_number}`}>#{order.order_number}</Link>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -70,7 +70,7 @@ export default function OrdersIndex({ orders }: { orders: any[] }) {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <Link href={`/customer/orders/${order.order_number}`} className="text-indigo-600 hover:text-indigo-900">Lihat Detail</Link>
+                                            <Link href={`/customer/orders/${order.order_number}`} className="text-cyan-600 hover:text-cyan-800">Lihat Detail</Link>
                                         </td>
                                     </tr>
                                 ))}

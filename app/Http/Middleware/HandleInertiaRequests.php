@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -43,6 +44,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
+                'info' => fn () => $request->session()->get('info'),
             ],
             'security' => [
                 'sessionLifetimeMinutes' => (int) config('session.lifetime'),
@@ -58,7 +60,7 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
@@ -68,8 +70,8 @@ class HandleInertiaRequests extends Middleware
 
         if ($user->hasRole('apoteker')) {
             return [
-                'pendingPrescriptions' => \App\Models\Order::where('prescription_status', 'pending')->count(),
-                'pharmacistProcessingOrders' => \App\Models\Order::where('order_number', 'like', 'ORD-%')
+                'pendingPrescriptions' => Order::where('prescription_status', 'pending')->count(),
+                'pharmacistProcessingOrders' => Order::where('order_number', 'like', 'ORD-%')
                     ->where('order_status', 'processing')
                     ->count(),
             ];
@@ -82,7 +84,7 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return [
                 'unreadCount' => 0,
                 'items' => [],

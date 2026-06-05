@@ -12,8 +12,9 @@ class SupplierController extends Controller
     public function index()
     {
         $suppliers = Supplier::latest()->get();
+
         return Inertia::render('Admin/Suppliers/Index', [
-            'suppliers' => $suppliers
+            'suppliers' => $suppliers,
         ]);
     }
 
@@ -23,10 +24,11 @@ class SupplierController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string'
+            'address' => 'nullable|string',
         ]);
 
         Supplier::create($validated);
+
         return back()->with('success', 'Supplier created successfully.');
     }
 
@@ -36,16 +38,18 @@ class SupplierController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string'
+            'address' => 'nullable|string',
         ]);
 
         $supplier->update($validated);
+
         return back()->with('success', 'Supplier updated successfully.');
     }
 
     public function destroy(Supplier $supplier)
     {
         $supplier->delete();
+
         return back()->with('success', 'Supplier deleted successfully.');
     }
 }

@@ -16,8 +16,7 @@ class NotificationCreated implements ShouldBroadcastNow
     public function __construct(
         public int $userId,
         public array $notification
-    ) {
-    }
+    ) {}
 
     public function broadcastOn(): array
     {

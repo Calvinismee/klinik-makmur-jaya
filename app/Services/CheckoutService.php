@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 class CheckoutService
 {
     protected $cartService;
+
     protected $stockService;
 
     public function __construct(CartService $cartService, StockService $stockService)
@@ -46,7 +47,7 @@ class CheckoutService
         }
 
         return DB::transaction(function () use ($userId, $data, $cart, $subtotal, $hasPrescriptionItem) {
-            $orderNumber = 'ORD-' . strtoupper(Str::random(10));
+            $orderNumber = 'ORD-'.strtoupper(Str::random(10));
 
             $order = Order::create([
                 'user_id' => $userId,
@@ -102,7 +103,7 @@ class CheckoutService
         }
 
         return DB::transaction(function () use ($cashierId, $data, $cart, $subtotal) {
-            $orderNumber = 'POS-' . strtoupper(Str::random(10));
+            $orderNumber = 'POS-'.strtoupper(Str::random(10));
 
             $order = Order::create([
                 'user_id' => $cashierId, // Use cashier's ID for offline orders or create a dummy user
@@ -111,7 +112,7 @@ class CheckoutService
                 'order_status' => 'completed',
                 'payment_status' => 'paid',
                 'prescription_status' => null,
-                'notes' => 'Offline POS Order. ' . ($data['notes'] ?? ''),
+                'notes' => 'Offline POS Order. '.($data['notes'] ?? ''),
             ]);
 
             foreach ($cart as $item) {

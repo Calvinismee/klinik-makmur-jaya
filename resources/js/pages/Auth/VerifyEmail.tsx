@@ -34,9 +34,11 @@ export default function VerifyEmail() {
             <Head title="Verifikasi Email" />
             <div className="w-full max-w-md px-6">
                 <div className="mb-8 text-center">
-                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-2xl font-bold text-white shadow-lg">
-                        K
-                    </div>
+                    <img
+                        src="/Logo.webp"
+                        alt="Logo Klinik Makmur Jaya"
+                        className="mx-auto mb-4 h-20 w-20 object-contain drop-shadow-lg"
+                    />
                     <h1 className="text-2xl font-bold text-slate-800">Verifikasi Email</h1>
                     <p className="mt-1 text-sm text-slate-400">Klinik Makmur Jaya</p>
                 </div>

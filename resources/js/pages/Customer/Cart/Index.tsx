@@ -26,7 +26,7 @@ export default function CartIndex({ cart, subtotal }: { cart: any[], subtotal: n
                 {cart.length === 0 ? (
                     <div className="text-center py-12 text-gray-500">
                         Keranjang Anda kosong. <br/>
-                        <a href="/customer/catalog" className="text-blue-600 hover:underline mt-2 inline-block">Lihat Katalog</a>
+                        <a href="/customer/catalog" className="mt-2 inline-block text-cyan-600 hover:underline">Lihat Katalog</a>
                     </div>
                 ) : (
                     <div className="flex flex-col lg:flex-row gap-8">
@@ -42,7 +42,7 @@ export default function CartIndex({ cart, subtotal }: { cart: any[], subtotal: n
                                     </div>
                                     <div className="flex-1 text-center sm:text-left">
                                         <h3 className="font-bold text-lg">{item.name}</h3>
-                                        <div className="text-blue-600 font-semibold mb-1">Rp {Number(item.price).toLocaleString('id-ID')}</div>
+                                        <div className="mb-1 font-semibold text-cyan-600">Rp {Number(item.price).toLocaleString('id-ID')}</div>
                                         {Boolean(item.requires_prescription) && (
                                             <span className="inline-block px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-800 mb-2">
                                                 Butuh Resep
@@ -92,7 +92,7 @@ export default function CartIndex({ cart, subtotal }: { cart: any[], subtotal: n
                                 <hr className="my-4" />
                                 <div className="flex justify-between mb-6 text-lg">
                                     <span className="font-bold">Total</span>
-                                    <span className="font-bold text-blue-600">Rp {Number(subtotal).toLocaleString('id-ID')}</span>
+                                    <span className="font-bold text-cyan-600">Rp {Number(subtotal).toLocaleString('id-ID')}</span>
                                 </div>
 
                                 {hasPrescriptionItems && (
@@ -102,7 +102,7 @@ export default function CartIndex({ cart, subtotal }: { cart: any[], subtotal: n
                                 )}
 
                                 <button 
-                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded transition duration-150 ease-in-out disabled:opacity-50"
+                                    className="btn-primary w-full py-3"
                                     disabled={cart.some(i => !i.in_stock)}
                                     onClick={() => router.get('/customer/checkout')}
                                 >

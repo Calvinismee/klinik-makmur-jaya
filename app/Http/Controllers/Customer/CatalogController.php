@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Medicine;
 use App\Models\Category;
+use App\Models\Medicine;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
@@ -72,7 +72,7 @@ class CatalogController extends Controller
 
     public function show(Medicine $medicine)
     {
-        if (!$medicine->is_active) {
+        if (! $medicine->is_active) {
             abort(404);
         }
 
@@ -149,11 +149,13 @@ class CatalogController extends Controller
 
             if (str_starts_with($haystack, $needle)) {
                 $bestScore = min($bestScore ?? 1, 1);
+
                 continue;
             }
 
             if (str_contains($haystack, $needle)) {
                 $bestScore = min($bestScore ?? 2, 2);
+
                 continue;
             }
 
@@ -172,7 +174,7 @@ class CatalogController extends Controller
         $needleTokens = preg_split('/\s+/', $needle, -1, PREG_SPLIT_NO_EMPTY);
         $haystackTokens = preg_split('/\s+/', $haystack, -1, PREG_SPLIT_NO_EMPTY);
 
-        if (!$needleTokens || !$haystackTokens) {
+        if (! $needleTokens || ! $haystackTokens) {
             return null;
         }
 

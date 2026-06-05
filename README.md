@@ -19,8 +19,8 @@
         <a href="docs/01-dokumen-perencanaan-proyek-klinik-makmur-jaya.pdf">Dokumen Perencanaan Proyek (PDF)</a><br>
         <a href="docs/02-dokumen-analisis-perancangan-dan-desain-teknis-sistem-klinik-makmur-jaya.pdf">Dokumen Analisis, Perancangan, dan Desain Teknis Sistem (PDF)</a><br>
         <a href="docs/03-dokumen-migrasi-cutover-dan-perubahan-klinik-makmur-jaya%20%281%29.pdf">Dokumen Migrasi, Cutover, dan Perubahan (PDF)</a><br>
-        <a href="Architecture.md">Dokumen Arsitektur Sistem (MD)</a><br>
-        <a href="implemented.md">Catatan Implementasi (MD)</a><br>
+        <a href="docs/03-dokumen-migrasi-cutover-dan-perubahan-klinik-makmur-jaya%20%281%29.pdf">Dokumen Migrasi, Cutover, dan Perubahan (PDF)</a><br>
+        <a href="docs/04-dokumen-pengujian-dan-panduan-pengguna-klinik-makmur-jaya%20%281%29.pdf">Dokumen Pengujian dan Panduan Penggunaan (PDF)</a><br>
         <a href="docs/security-risk-analysis.md">Analisis Risiko Keamanan Informasi (MD)</a>
     </p>
     <table>

@@ -5,7 +5,16 @@ import { digitsOnly, preventNonNumericKey } from '../../../utils/numericInput';
 
 export default function SuppliersIndex({ suppliers }: { suppliers: any[] }) {
     const [editingId, setEditingId] = useState<number | null>(null);
-    const { data, setData, post, put, delete: destroy, processing, reset, errors } = useForm({
+    const {
+        data,
+        setData,
+        post,
+        put,
+        delete: destroy,
+        processing,
+        reset,
+        errors,
+    } = useForm({
         name: '',
         email: '',
         phone: '',
@@ -19,11 +28,11 @@ export default function SuppliersIndex({ suppliers }: { suppliers: any[] }) {
                 onSuccess: () => {
                     setEditingId(null);
                     reset();
-                }
+                },
             });
         } else {
             post('/admin/suppliers', {
-                onSuccess: () => reset()
+                onSuccess: () => reset(),
             });
         }
     };
@@ -46,33 +55,89 @@ export default function SuppliersIndex({ suppliers }: { suppliers: any[] }) {
 
     return (
         <AppLayout title="Kelola Supplier">
-            <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-                <h2 className="text-lg font-bold mb-4">{editingId ? 'Edit Supplier' : 'Tambah Supplier'}</h2>
-                <form onSubmit={submit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-lg font-bold">
+                    {editingId ? 'Edit Supplier' : 'Tambah Supplier'}
+                </h2>
+                <form
+                    onSubmit={submit}
+                    className="grid grid-cols-1 gap-4 md:grid-cols-2"
+                >
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Nama</label>
-                        <input type="text" className="mt-1 block w-full rounded-md border p-2" value={data.name} onChange={e => setData('name', e.target.value)} required />
-                        {errors.name && <div className="text-red-500 text-sm">{errors.name}</div>}
+                        <label className="block text-sm font-medium text-gray-700">
+                            Nama
+                        </label>
+                        <input
+                            type="text"
+                            className="mt-1 block w-full rounded-md border p-2"
+                            value={data.name}
+                            onChange={(e) => setData('name', e.target.value)}
+                            required
+                        />
+                        {errors.name && (
+                            <div className="text-sm text-red-500">
+                                {errors.name}
+                            </div>
+                        )}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" className="mt-1 block w-full rounded-md border p-2" value={data.email} onChange={e => setData('email', e.target.value)} />
-                        {errors.email && <div className="text-red-500 text-sm">{errors.email}</div>}
+                        <label className="block text-sm font-medium text-gray-700">
+                            Email
+                        </label>
+                        <input
+                            type="email"
+                            className="mt-1 block w-full rounded-md border p-2"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                        />
+                        {errors.email && (
+                            <div className="text-sm text-red-500">
+                                {errors.email}
+                            </div>
+                        )}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Telepon</label>
-                        <input type="text" inputMode="numeric" className="mt-1 block w-full rounded-md border p-2" value={data.phone} onKeyDown={preventNonNumericKey} onChange={e => setData('phone', digitsOnly(e.target.value))} />
+                        <label className="block text-sm font-medium text-gray-700">
+                            Telepon
+                        </label>
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            className="mt-1 block w-full rounded-md border p-2"
+                            value={data.phone}
+                            onKeyDown={preventNonNumericKey}
+                            onChange={(e) =>
+                                setData('phone', digitsOnly(e.target.value))
+                            }
+                        />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Alamat</label>
-                        <textarea className="mt-1 block w-full rounded-md border p-2" value={data.address} onChange={e => setData('address', e.target.value)} />
+                        <label className="block text-sm font-medium text-gray-700">
+                            Alamat
+                        </label>
+                        <textarea
+                            className="mt-1 block w-full rounded-md border p-2"
+                            value={data.address}
+                            onChange={(e) => setData('address', e.target.value)}
+                        />
                     </div>
-                    <div className="md:col-span-2 flex gap-2">
-                        <button type="submit" disabled={processing} className="btn-primary">
+                    <div className="flex gap-2 md:col-span-2">
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="btn-primary"
+                        >
                             {editingId ? 'Update' : 'Simpan'}
                         </button>
                         {editingId && (
-                            <button type="button" onClick={() => { setEditingId(null); reset(); }} className="btn-secondary">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setEditingId(null);
+                                    reset();
+                                }}
+                                className="btn-secondary"
+                            >
                                 Batal
                             </button>
                         )}
@@ -80,28 +145,54 @@ export default function SuppliersIndex({ suppliers }: { suppliers: any[] }) {
                 </form>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+            <div className="overflow-x-auto rounded-lg bg-white shadow-sm">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kontak</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Alamat</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                Nama
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                Kontak
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                Alamat
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                Aksi
+                            </th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-200 bg-white">
                         {suppliers.map((supplier) => (
                             <tr key={supplier.id}>
-                                <td className="px-6 py-4 whitespace-nowrap">{supplier.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    {supplier.name}
+                                </td>
                                 <td className="px-6 py-4">
                                     <div>{supplier.email}</div>
-                                    <div className="text-sm text-gray-500">{supplier.phone}</div>
+                                    <div className="text-sm text-gray-500">
+                                        {supplier.phone}
+                                    </div>
                                 </td>
-                                <td className="px-6 py-4">{supplier.address}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button onClick={() => edit(supplier)} className="text-cyan-600 hover:text-cyan-800 mr-4">Edit</button>
-                                    <button onClick={() => handleDelete(supplier.id)} className="text-red-600 hover:text-red-900">Hapus</button>
+                                <td className="px-6 py-4">
+                                    {supplier.address}
+                                </td>
+                                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                                    <button
+                                        onClick={() => edit(supplier)}
+                                        className="mr-4 text-cyan-600 hover:text-cyan-800"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            handleDelete(supplier.id)
+                                        }
+                                        className="text-red-600 hover:text-red-900"
+                                    >
+                                        Hapus
+                                    </button>
                                 </td>
                             </tr>
                         ))}

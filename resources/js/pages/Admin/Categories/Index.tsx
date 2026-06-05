@@ -4,7 +4,16 @@ import AppLayout from '../../../Layouts/AppLayout';
 
 export default function CategoriesIndex({ categories }: { categories: any[] }) {
     const [editingId, setEditingId] = useState<number | null>(null);
-    const { data, setData, post, put, delete: destroy, processing, reset, errors } = useForm({
+    const {
+        data,
+        setData,
+        post,
+        put,
+        delete: destroy,
+        processing,
+        reset,
+        errors,
+    } = useForm({
         name: '',
         description: '',
     });
@@ -16,11 +25,11 @@ export default function CategoriesIndex({ categories }: { categories: any[] }) {
                 onSuccess: () => {
                     setEditingId(null);
                     reset();
-                }
+                },
             });
         } else {
             post('/admin/categories', {
-                onSuccess: () => reset()
+                onSuccess: () => reset(),
             });
         }
     };
@@ -41,24 +50,60 @@ export default function CategoriesIndex({ categories }: { categories: any[] }) {
 
     return (
         <AppLayout title="Kelola Kategori">
-            <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-                <h2 className="text-lg font-bold mb-4">{editingId ? 'Edit Kategori' : 'Tambah Kategori'}</h2>
-                <form onSubmit={submit} className="flex flex-col gap-4 max-w-md">
+            <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-lg font-bold">
+                    {editingId ? 'Edit Kategori' : 'Tambah Kategori'}
+                </h2>
+                <form
+                    onSubmit={submit}
+                    className="flex max-w-md flex-col gap-4"
+                >
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Nama</label>
-                        <input type="text" className="mt-1 block w-full rounded-md border p-2" value={data.name} onChange={e => setData('name', e.target.value)} required />
-                        {errors.name && <div className="text-red-500 text-sm">{errors.name}</div>}
+                        <label className="block text-sm font-medium text-gray-700">
+                            Nama
+                        </label>
+                        <input
+                            type="text"
+                            className="mt-1 block w-full rounded-md border p-2"
+                            value={data.name}
+                            onChange={(e) => setData('name', e.target.value)}
+                            required
+                        />
+                        {errors.name && (
+                            <div className="text-sm text-red-500">
+                                {errors.name}
+                            </div>
+                        )}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Deskripsi</label>
-                        <textarea className="mt-1 block w-full rounded-md border p-2" value={data.description} onChange={e => setData('description', e.target.value)} />
+                        <label className="block text-sm font-medium text-gray-700">
+                            Deskripsi
+                        </label>
+                        <textarea
+                            className="mt-1 block w-full rounded-md border p-2"
+                            value={data.description}
+                            onChange={(e) =>
+                                setData('description', e.target.value)
+                            }
+                        />
                     </div>
                     <div className="flex gap-2">
-                        <button type="submit" disabled={processing} className="btn-primary">
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="btn-primary"
+                        >
                             {editingId ? 'Update' : 'Simpan'}
                         </button>
                         {editingId && (
-                            <button type="button" onClick={() => { setEditingId(null); reset(); }} className="btn-secondary">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setEditingId(null);
+                                    reset();
+                                }}
+                                className="btn-secondary"
+                            >
                                 Batal
                             </button>
                         )}
@@ -66,23 +111,41 @@ export default function CategoriesIndex({ categories }: { categories: any[] }) {
                 </form>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="overflow-hidden rounded-lg bg-white shadow-sm">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                Nama
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                Deskripsi
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                Aksi
+                            </th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-200 bg-white">
                         {categories.map((cat) => (
                             <tr key={cat.id}>
-                                <td className="px-6 py-4 whitespace-nowrap">{cat.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    {cat.name}
+                                </td>
                                 <td className="px-6 py-4">{cat.description}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button onClick={() => edit(cat)} className="text-cyan-600 hover:text-cyan-800 mr-4">Edit</button>
-                                    <button onClick={() => handleDelete(cat.id)} className="text-red-600 hover:text-red-900">Hapus</button>
+                                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                                    <button
+                                        onClick={() => edit(cat)}
+                                        className="mr-4 text-cyan-600 hover:text-cyan-800"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(cat.id)}
+                                        className="text-red-600 hover:text-red-900"
+                                    >
+                                        Hapus
+                                    </button>
                                 </td>
                             </tr>
                         ))}

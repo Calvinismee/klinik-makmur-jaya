@@ -39,13 +39,21 @@ export default function VerifyEmail() {
                         alt="Logo Klinik Makmur Jaya"
                         className="mx-auto mb-4 h-20 w-20 object-contain drop-shadow-lg"
                     />
-                    <h1 className="text-2xl font-bold text-slate-800">Verifikasi Email</h1>
-                    <p className="mt-1 text-sm text-slate-400">Klinik Makmur Jaya</p>
+                    <h1 className="text-2xl font-bold text-slate-800">
+                        Verifikasi Email
+                    </h1>
+                    <p className="mt-1 text-sm text-slate-400">
+                        Klinik Makmur Jaya
+                    </p>
                 </div>
 
                 <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
                     <div className="mb-5 rounded-lg border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm text-cyan-800">
-                        Kami sudah mengirim link verifikasi ke <span className="font-semibold">{props.auth.user.email}</span>.
+                        Kami sudah mengirim link verifikasi ke{' '}
+                        <span className="font-semibold">
+                            {props.auth.user.email}
+                        </span>
+                        .
                     </div>
 
                     {props.flash?.success && (

@@ -30,7 +30,9 @@ export default function FileUploadField({
     onFileChange,
 }: FileUploadFieldProps) {
     const inputId = useId();
-    const [localFile, setLocalFile] = useState<File | null>(selectedFile || null);
+    const [localFile, setLocalFile] = useState<File | null>(
+        selectedFile || null,
+    );
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const activeFile = selectedFile !== undefined ? selectedFile : localFile;
 
@@ -39,7 +41,11 @@ export default function FileUploadField({
     }, [selectedFile]);
 
     useEffect(() => {
-        if (!previewImage || !activeFile || !activeFile.type.startsWith('image/')) {
+        if (
+            !previewImage ||
+            !activeFile ||
+            !activeFile.type.startsWith('image/')
+        ) {
             setPreviewUrl(null);
             return;
         }
@@ -77,7 +83,13 @@ export default function FileUploadField({
                                 className="h-full w-full object-cover"
                             />
                         ) : (
-                            <svg viewBox="0 0 24 24" className="h-7 w-7 text-cyan-600" fill="none" stroke="currentColor" strokeWidth="1.8">
+                            <svg
+                                viewBox="0 0 24 24"
+                                className="h-7 w-7 text-cyan-600"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                            >
                                 <path d="M4 16.5V19a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2.5" />
                                 <path d="M12 4v12" />
                                 <path d="m7.5 8.5 4.5-4.5 4.5 4.5" />
@@ -88,7 +100,13 @@ export default function FileUploadField({
 
                 {!previewImage && (
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-cyan-600 shadow-sm ring-1 ring-cyan-100">
-                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                        <svg
+                            viewBox="0 0 24 24"
+                            className="h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                        >
                             <path d="M4 16.5V19a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2.5" />
                             <path d="M12 4v12" />
                             <path d="m7.5 8.5 4.5-4.5 4.5 4.5" />
@@ -100,10 +118,20 @@ export default function FileUploadField({
                     <div className="text-sm font-semibold text-gray-900">
                         {activeFile ? activeFile.name : buttonText}
                     </div>
-                    {helper && <div className="mt-1 text-xs text-gray-500">{helper}</div>}
+                    {helper && (
+                        <div className="mt-1 text-xs text-gray-500">
+                            {helper}
+                        </div>
+                    )}
                 </div>
             </label>
-            <input id={inputId} type="file" accept={accept} className="hidden" onChange={handleChange} />
+            <input
+                id={inputId}
+                type="file"
+                accept={accept}
+                className="hidden"
+                onChange={handleChange}
+            />
             {error && <div className="mt-1 text-sm text-red-500">{error}</div>}
         </div>
     );

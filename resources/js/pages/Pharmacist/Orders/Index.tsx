@@ -17,14 +17,21 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
     const [bulkLoading, setBulkLoading] = useState(false);
     const [dialog, setDialog] = useState<ApprovalDialog | null>(null);
     const [dialogLoading, setDialogLoading] = useState(false);
-    const processableOrders = orders.filter((order) => order.order_status === 'processing');
-    const allProcessableSelected = processableOrders.length > 0 && processableOrders.every((order) => selectedOrderIds.includes(order.id));
+    const processableOrders = orders.filter(
+        (order) => order.order_status === 'processing',
+    );
+    const allProcessableSelected =
+        processableOrders.length > 0 &&
+        processableOrders.every((order) => selectedOrderIds.includes(order.id));
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'processing': return 'bg-blue-100 text-blue-800';
-            case 'ready_to_pickup': return 'bg-emerald-100 text-emerald-800';
-            default: return 'bg-gray-100 text-gray-800';
+            case 'processing':
+                return 'bg-blue-100 text-blue-800';
+            case 'ready_to_pickup':
+                return 'bg-emerald-100 text-emerald-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
         }
     };
 
@@ -38,15 +45,19 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
     };
 
     const toggleOrder = (orderId: number) => {
-        setSelectedOrderIds((current) => (
+        setSelectedOrderIds((current) =>
             current.includes(orderId)
                 ? current.filter((id) => id !== orderId)
-                : [...current, orderId]
-        ));
+                : [...current, orderId],
+        );
     };
 
     const toggleAllProcessable = () => {
-        setSelectedOrderIds(allProcessableSelected ? [] : processableOrders.map((order) => order.id));
+        setSelectedOrderIds(
+            allProcessableSelected
+                ? []
+                : processableOrders.map((order) => order.id),
+        );
     };
 
     const markReady = (orderId: number) => {
@@ -90,37 +101,45 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
 
         if (dialog.type === 'bulk') {
             setBulkLoading(true);
-            router.post('/pharmacist/orders/bulk-ready', {
-                order_ids: dialog.orderIds || [],
-            }, {
-                preserveScroll: true,
-                onSuccess: () => setSelectedOrderIds([]),
-                onFinish: () => {
-                    setBulkLoading(false);
-                    setDialogLoading(false);
-                    setDialog(null);
+            router.post(
+                '/pharmacist/orders/bulk-ready',
+                {
+                    order_ids: dialog.orderIds || [],
                 },
-            });
+                {
+                    preserveScroll: true,
+                    onSuccess: () => setSelectedOrderIds([]),
+                    onFinish: () => {
+                        setBulkLoading(false);
+                        setDialogLoading(false);
+                        setDialog(null);
+                    },
+                },
+            );
 
             return;
         }
 
         if (dialog.orderId) {
             setLoadingOrderId(dialog.orderId);
-            router.post(`/pharmacist/orders/${dialog.orderId}/ready`, {}, {
-                preserveScroll: true,
-                onFinish: () => {
-                    setLoadingOrderId(null);
-                    setDialogLoading(false);
-                    setDialog(null);
+            router.post(
+                `/pharmacist/orders/${dialog.orderId}/ready`,
+                {},
+                {
+                    preserveScroll: true,
+                    onFinish: () => {
+                        setLoadingOrderId(null);
+                        setDialogLoading(false);
+                        setDialog(null);
+                    },
                 },
-            });
+            );
         }
     };
 
     return (
         <AppLayout title="Siapkan Pesanan">
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">
                 <div className="mb-6 flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
                     <h1 className="text-2xl font-bold">Siapkan Pesanan</h1>
                     <button
@@ -129,7 +148,9 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
                         disabled={selectedOrderIds.length === 0 || bulkLoading}
                         className="btn-primary text-sm"
                     >
-                        {bulkLoading ? 'Memproses...' : `Tandai Siap (${selectedOrderIds.length})`}
+                        {bulkLoading
+                            ? 'Memproses...'
+                            : `Tandai Siap (${selectedOrderIds.length})`}
                     </button>
                 </div>
 
@@ -143,33 +164,61 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
                                         className="rounded border-gray-300 text-cyan-600"
                                         checked={allProcessableSelected}
                                         onChange={toggleAllProcessable}
-                                        disabled={processableOrders.length === 0 || bulkLoading}
+                                        disabled={
+                                            processableOrders.length === 0 ||
+                                            bulkLoading
+                                        }
                                         aria-label="Pilih semua pesanan yang bisa diproses"
                                     />
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pesanan</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pelanggan</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                    Pesanan
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                    Pelanggan
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                    Item
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                    Aksi
+                                </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="divide-y divide-gray-200 bg-white">
                             {orders.map((order) => (
                                 <tr key={order.id}>
                                     <td className="px-6 py-4">
                                         <input
                                             type="checkbox"
                                             className="rounded border-gray-300 text-cyan-600"
-                                            checked={selectedOrderIds.includes(order.id)}
-                                            onChange={() => toggleOrder(order.id)}
-                                            disabled={order.order_status !== 'processing' || bulkLoading || loadingOrderId === order.id}
+                                            checked={selectedOrderIds.includes(
+                                                order.id,
+                                            )}
+                                            onChange={() =>
+                                                toggleOrder(order.id)
+                                            }
+                                            disabled={
+                                                order.order_status !==
+                                                    'processing' ||
+                                                bulkLoading ||
+                                                loadingOrderId === order.id
+                                            }
                                             aria-label={`Pilih pesanan ${order.order_number}`}
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="font-medium text-blue-600">#{order.order_number}</div>
-                                        <div className="text-xs text-gray-500">{new Date(order.created_at).toLocaleDateString('id-ID')}</div>
+                                        <div className="font-medium text-blue-600">
+                                            #{order.order_number}
+                                        </div>
+                                        <div className="text-xs text-gray-500">
+                                            {new Date(
+                                                order.created_at,
+                                            ).toLocaleDateString('id-ID')}
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         {order.user?.name}
@@ -177,29 +226,48 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
                                     <td className="px-6 py-4">
                                         <div className="space-y-1">
                                             {order.items?.map((item: any) => (
-                                                <div key={item.id} className="flex justify-between gap-4 text-sm">
-                                                    <span>{item.medicine?.name || 'Obat'}</span>
-                                                    <span className="font-bold text-gray-700">x{item.quantity}</span>
+                                                <div
+                                                    key={item.id}
+                                                    className="flex justify-between gap-4 text-sm"
+                                                >
+                                                    <span>
+                                                        {item.medicine?.name ||
+                                                            'Obat'}
+                                                    </span>
+                                                    <span className="font-bold text-gray-700">
+                                                        x{item.quantity}
+                                                    </span>
                                                 </div>
                                             ))}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.order_status)}`}>
+                                        <span
+                                            className={`inline-flex rounded-full px-2 text-xs leading-5 font-semibold ${getStatusColor(order.order_status)}`}
+                                        >
                                             {formatStatus(order.order_status)}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                         {order.order_status === 'processing' ? (
                                             <button
-                                                onClick={() => markReady(order.id)}
-                                                disabled={bulkLoading || loadingOrderId === order.id}
+                                                onClick={() =>
+                                                    markReady(order.id)
+                                                }
+                                                disabled={
+                                                    bulkLoading ||
+                                                    loadingOrderId === order.id
+                                                }
                                                 className="btn-primary text-sm"
                                             >
-                                                {loadingOrderId === order.id ? 'Memproses...' : 'Tandai Siap Diambil/Dikirim'}
+                                                {loadingOrderId === order.id
+                                                    ? 'Memproses...'
+                                                    : 'Tandai Siap Diambil/Dikirim'}
                                             </button>
                                         ) : (
-                                            <span className="text-gray-400">Tidak ada aksi</span>
+                                            <span className="text-gray-400">
+                                                Tidak ada aksi
+                                            </span>
                                         )}
                                     </td>
                                 </tr>
@@ -207,7 +275,9 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
                         </tbody>
                     </table>
                     {orders.length === 0 && (
-                        <div className="text-center py-6 text-gray-500">Tidak ada pesanan yang perlu disiapkan.</div>
+                        <div className="py-6 text-center text-gray-500">
+                            Tidak ada pesanan yang perlu disiapkan.
+                        </div>
                     )}
                 </div>
             </div>
@@ -216,8 +286,12 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 px-4">
                     <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl ring-1 ring-black/5">
                         <div className="mb-5">
-                            <h2 className="text-lg font-bold text-slate-900">{dialog.title}</h2>
-                            <p className="mt-2 text-sm leading-6 text-slate-600">{dialog.message}</p>
+                            <h2 className="text-lg font-bold text-slate-900">
+                                {dialog.title}
+                            </h2>
+                            <p className="mt-2 text-sm leading-6 text-slate-600">
+                                {dialog.message}
+                            </p>
                         </div>
 
                         <div className="flex justify-end gap-3">
@@ -235,8 +309,12 @@ export default function PharmacistOrdersIndex({ orders }: { orders: any[] }) {
                                 disabled={dialogLoading}
                                 className="btn-primary gap-2 text-sm"
                             >
-                                {dialogLoading && <span className="h-3 w-3 animate-spin rounded-full border-2 border-cyan-200 border-t-white" />}
-                                {dialogLoading ? 'Memproses...' : dialog.confirmLabel}
+                                {dialogLoading && (
+                                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-cyan-200 border-t-white" />
+                                )}
+                                {dialogLoading
+                                    ? 'Memproses...'
+                                    : dialog.confirmLabel}
                             </button>
                         </div>
                     </div>

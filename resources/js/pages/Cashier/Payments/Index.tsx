@@ -27,18 +27,28 @@ type Summary = {
     revenue: number | string;
 };
 
-export default function CashierOnlinePaymentsIndex({ payments, summary }: { payments: Payment[]; summary: Summary }) {
-    const [expandedReferenceId, setExpandedReferenceId] = useState<number | null>(null);
-    const formatCurrency = (value: number | string) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`;
-    const formatDate = (value?: string | null) => value
-        ? new Date(value).toLocaleString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        })
-        : '-';
+export default function CashierOnlinePaymentsIndex({
+    payments,
+    summary,
+}: {
+    payments: Payment[];
+    summary: Summary;
+}) {
+    const [expandedReferenceId, setExpandedReferenceId] = useState<
+        number | null
+    >(null);
+    const formatCurrency = (value: number | string) =>
+        `Rp ${Number(value || 0).toLocaleString('id-ID')}`;
+    const formatDate = (value?: string | null) =>
+        value
+            ? new Date(value).toLocaleString('id-ID', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+              })
+            : '-';
 
     const formatPaymentStatus = (status: string) => {
         const map: Record<string, string> = {
@@ -77,7 +87,9 @@ export default function CashierOnlinePaymentsIndex({ payments, summary }: { paym
             failure: 'Gagal',
         };
 
-        return status ? map[status] || status.replace(/_/g, ' ').toUpperCase() : '-';
+        return status
+            ? map[status] || status.replace(/_/g, ' ').toUpperCase()
+            : '-';
     };
 
     const getGatewayStatusColor = (status?: string | null) => {
@@ -97,7 +109,8 @@ export default function CashierOnlinePaymentsIndex({ payments, summary }: { paym
         }
     };
 
-    const shortReference = (value?: string | null) => value ? `${value.slice(0, 8)}...` : '-';
+    const shortReference = (value?: string | null) =>
+        value ? `${value.slice(0, 8)}...` : '-';
 
     const formatOrderStatus = (status: string) => {
         const map: Record<string, string> = {
@@ -135,39 +148,65 @@ export default function CashierOnlinePaymentsIndex({ payments, summary }: { paym
 
     return (
         <AppLayout title="Pembayaran Online">
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div className="mb-6 rounded-lg bg-white p-6 shadow-sm">
                 <div className="flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Pembayaran Online</h1>
+                        <h1 className="text-2xl font-bold">
+                            Pembayaran Online
+                        </h1>
                         <p className="mt-1 text-sm text-slate-500">
-                            Monitoring pembayaran online pelanggan. Verifikasi siap diambil/dikirim tetap dilakukan oleh apoteker.
+                            Monitoring pembayaran online pelanggan. Verifikasi
+                            siap diambil/dikirim tetap dilakukan oleh apoteker.
                         </p>
                     </div>
-                    <a href="/cashier/payments" className="btn-secondary text-sm">
+                    <a
+                        href="/cashier/payments"
+                        className="btn-secondary text-sm"
+                    >
                         Refresh
                     </a>
                 </div>
 
                 <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
                     <div className="rounded-lg border-l-4 border-cyan-500 bg-slate-50 p-4">
-                        <div className="text-xs font-semibold uppercase text-slate-500">Total Online</div>
-                        <div className="mt-1 text-2xl font-bold text-slate-900">{summary.total}</div>
+                        <div className="text-xs font-semibold text-slate-500 uppercase">
+                            Total Online
+                        </div>
+                        <div className="mt-1 text-2xl font-bold text-slate-900">
+                            {summary.total}
+                        </div>
                     </div>
                     <div className="rounded-lg border-l-4 border-emerald-500 bg-slate-50 p-4">
-                        <div className="text-xs font-semibold uppercase text-slate-500">Sudah Dibayar</div>
-                        <div className="mt-1 text-2xl font-bold text-slate-900">{summary.paid}</div>
+                        <div className="text-xs font-semibold text-slate-500 uppercase">
+                            Sudah Dibayar
+                        </div>
+                        <div className="mt-1 text-2xl font-bold text-slate-900">
+                            {summary.paid}
+                        </div>
                     </div>
                     <div className="rounded-lg border-l-4 border-orange-500 bg-slate-50 p-4">
-                        <div className="text-xs font-semibold uppercase text-slate-500">Menunggu</div>
-                        <div className="mt-1 text-2xl font-bold text-slate-900">{summary.pending}</div>
+                        <div className="text-xs font-semibold text-slate-500 uppercase">
+                            Menunggu
+                        </div>
+                        <div className="mt-1 text-2xl font-bold text-slate-900">
+                            {summary.pending}
+                        </div>
                     </div>
                     <div className="rounded-lg border-l-4 border-red-500 bg-slate-50 p-4">
-                        <div className="text-xs font-semibold uppercase text-slate-500">Gagal</div>
-                        <div className="mt-1 text-2xl font-bold text-slate-900">{summary.failed}</div>
+                        <div className="text-xs font-semibold text-slate-500 uppercase">
+                            Gagal
+                        </div>
+                        <div className="mt-1 text-2xl font-bold text-slate-900">
+                            {summary.failed}
+                        </div>
                     </div>
                     <div className="rounded-lg border-l-4 border-blue-500 bg-slate-50 p-4">
-                        <div className="text-xs font-semibold uppercase text-slate-500">Penerimaan Online</div>
-                        <div className="mt-1 text-xl font-bold text-slate-900">{formatCurrency(summary.revenue)}</div>
+                        <div className="text-xs font-semibold text-slate-500 uppercase">
+                            Penerimaan Online
+                        </div>
+                        <div className="mt-1 text-xl font-bold text-slate-900">
+                            {formatCurrency(summary.revenue)}
+                        </div>
                     </div>
                 </div>
 
@@ -175,67 +214,123 @@ export default function CashierOnlinePaymentsIndex({ payments, summary }: { paym
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Pesanan</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Pelanggan</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Total</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status Bayar</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status Pesanan</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Metode</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status Gateway</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Dibayar Pada</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Pesanan
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Pelanggan
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Total
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Status Bayar
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Status Pesanan
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Metode
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Status Gateway
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Dibayar Pada
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
                             {payments.map((payment) => (
-                                <tr key={payment.id} className="hover:bg-gray-50">
+                                <tr
+                                    key={payment.id}
+                                    className="hover:bg-gray-50"
+                                >
                                     <td className="px-4 py-3 whitespace-nowrap">
-                                        <div className="font-semibold text-cyan-700">#{payment.order_number}</div>
-                                        <div className="text-xs text-slate-400">{formatDate(payment.created_at)}</div>
+                                        <div className="font-semibold text-cyan-700">
+                                            #{payment.order_number}
+                                        </div>
+                                        <div className="text-xs text-slate-400">
+                                            {formatDate(payment.created_at)}
+                                        </div>
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap">
-                                        <div className="font-medium text-slate-900">{payment.user?.name || '-'}</div>
-                                        <div className="text-xs text-slate-400">{payment.user?.email || '-'}</div>
+                                        <div className="font-medium text-slate-900">
+                                            {payment.user?.name || '-'}
+                                        </div>
+                                        <div className="text-xs text-slate-400">
+                                            {payment.user?.email || '-'}
+                                        </div>
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap font-bold text-slate-900">
+                                    <td className="px-4 py-3 font-bold whitespace-nowrap text-slate-900">
                                         {formatCurrency(payment.total_amount)}
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap">
-                                        <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getPaymentStatusColor(payment.payment_status)}`}>
-                                            {formatPaymentStatus(payment.payment_status)}
+                                        <span
+                                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getPaymentStatusColor(payment.payment_status)}`}
+                                        >
+                                            {formatPaymentStatus(
+                                                payment.payment_status,
+                                            )}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap">
-                                        <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getOrderStatusColor(payment.order_status)}`}>
-                                            {formatOrderStatus(payment.order_status)}
+                                        <span
+                                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getOrderStatusColor(payment.order_status)}`}
+                                        >
+                                            {formatOrderStatus(
+                                                payment.order_status,
+                                            )}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-700">
-                                        {payment.payment_method ? payment.payment_method.toUpperCase() : 'Online'}
+                                    <td className="px-4 py-3 text-sm whitespace-nowrap text-slate-700">
+                                        {payment.payment_method
+                                            ? payment.payment_method.toUpperCase()
+                                            : 'Online'}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                        <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getGatewayStatusColor(payment.midtrans_transaction_status)}`}>
-                                            {formatGatewayStatus(payment.midtrans_transaction_status)}
+                                    <td className="px-4 py-3 text-sm whitespace-nowrap">
+                                        <span
+                                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getGatewayStatusColor(payment.midtrans_transaction_status)}`}
+                                        >
+                                            {formatGatewayStatus(
+                                                payment.midtrans_transaction_status,
+                                            )}
                                         </span>
                                         {payment.midtrans_transaction_id ? (
                                             <div className="mt-1">
                                                 <button
                                                     type="button"
-                                                    onClick={() => setExpandedReferenceId(expandedReferenceId === payment.id ? null : payment.id)}
+                                                    onClick={() =>
+                                                        setExpandedReferenceId(
+                                                            expandedReferenceId ===
+                                                                payment.id
+                                                                ? null
+                                                                : payment.id,
+                                                        )
+                                                    }
                                                     className="text-xs font-medium text-cyan-700 hover:text-cyan-900"
                                                 >
-                                                    Ref: {shortReference(payment.midtrans_transaction_id)}
+                                                    Ref:{' '}
+                                                    {shortReference(
+                                                        payment.midtrans_transaction_id,
+                                                    )}
                                                 </button>
-                                                {expandedReferenceId === payment.id && (
-                                                    <div className="mt-2 max-w-[260px] whitespace-normal break-all rounded-md border border-slate-200 bg-slate-50 p-2 text-xs text-slate-600">
-                                                        {payment.midtrans_transaction_id}
+                                                {expandedReferenceId ===
+                                                    payment.id && (
+                                                    <div className="mt-2 max-w-[260px] rounded-md border border-slate-200 bg-slate-50 p-2 text-xs break-all whitespace-normal text-slate-600">
+                                                        {
+                                                            payment.midtrans_transaction_id
+                                                        }
                                                     </div>
                                                 )}
                                             </div>
                                         ) : (
-                                            <div className="mt-1 text-xs text-slate-400">Ref: -</div>
+                                            <div className="mt-1 text-xs text-slate-400">
+                                                Ref: -
+                                            </div>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
+                                    <td className="px-4 py-3 text-sm whitespace-nowrap text-slate-500">
                                         {formatDate(payment.paid_at)}
                                     </td>
                                 </tr>

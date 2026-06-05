@@ -25,8 +25,16 @@ export function decimalOnly(value: string): string {
     return rest.length === 0 ? first : `${first}.${rest.join('')}`;
 }
 
-export function preventNonNumericKey(event: KeyboardEvent<HTMLInputElement>, decimal = false): void {
-    if (event.ctrlKey || event.metaKey || event.altKey || controlKeys.has(event.key)) {
+export function preventNonNumericKey(
+    event: KeyboardEvent<HTMLInputElement>,
+    decimal = false,
+): void {
+    if (
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        controlKeys.has(event.key)
+    ) {
         return;
     }
 

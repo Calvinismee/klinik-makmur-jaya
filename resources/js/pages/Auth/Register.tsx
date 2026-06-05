@@ -37,7 +37,7 @@ export default function Register() {
     const confirmationMatches = data.password === data.password_confirmation;
     const nikStarted = data.identity_number.length > 0;
     const nikIs16 = data.identity_number.length === 16;
-    
+
     const passwordInputClass = passwordStarted
         ? passwordIsStrong
             ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
@@ -53,7 +53,12 @@ export default function Register() {
             ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
             : 'border-red-300 focus:border-red-500 focus:ring-red-500'
         : 'border-gray-300 focus:border-cyan-500 focus:ring-cyan-500';
-    const canSubmit = !processing && passwordIsStrong && confirmationStarted && confirmationMatches && nikIs16;
+    const canSubmit =
+        !processing &&
+        passwordIsStrong &&
+        confirmationStarted &&
+        confirmationMatches &&
+        nikIs16;
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,50 +75,83 @@ export default function Register() {
                         alt="Logo Klinik Makmur Jaya"
                         className="mx-auto mb-4 h-20 w-20 object-contain drop-shadow-lg transition-transform duration-200 hover:scale-105"
                     />
-                    <h1 className="text-2xl font-bold text-slate-800">Registrasi Pasien</h1>
-                    <p className="mt-1 text-sm text-slate-400">Klinik Makmur Jaya</p>
+                    <h1 className="text-2xl font-bold text-slate-800">
+                        Registrasi Pasien
+                    </h1>
+                    <p className="mt-1 text-sm text-slate-400">
+                        Klinik Makmur Jaya
+                    </p>
                 </div>
 
                 <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
                     <form onSubmit={submit} className="space-y-5">
                         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-600">Nama Lengkap</label>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-600">
+                                    Nama Lengkap
+                                </label>
                                 <input
                                     type="text"
                                     className="block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
                                     value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('name', e.target.value)
+                                    }
                                 />
-                                {errors.name && <div className="mt-1 text-xs text-red-500">{errors.name}</div>}
+                                {errors.name && (
+                                    <div className="mt-1 text-xs text-red-500">
+                                        {errors.name}
+                                    </div>
+                                )}
                             </div>
 
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-600">Email</label>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-600">
+                                    Email
+                                </label>
                                 <input
                                     type="email"
                                     className="block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
                                     value={data.email}
-                                    onChange={(e) => setData('email', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('email', e.target.value)
+                                    }
                                 />
-                                {errors.email && <div className="mt-1 text-xs text-red-500">{errors.email}</div>}
+                                {errors.email && (
+                                    <div className="mt-1 text-xs text-red-500">
+                                        {errors.email}
+                                    </div>
+                                )}
                             </div>
 
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-600">Nomor HP</label>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-600">
+                                    Nomor HP
+                                </label>
                                 <input
                                     type="tel"
                                     inputMode="numeric"
                                     className="block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
                                     value={data.phone}
                                     onKeyDown={preventNonNumericKey}
-                                    onChange={(e) => setData('phone', digitsOnly(e.target.value))}
+                                    onChange={(e) =>
+                                        setData(
+                                            'phone',
+                                            digitsOnly(e.target.value),
+                                        )
+                                    }
                                 />
-                                {errors.phone && <div className="mt-1 text-xs text-red-500">{errors.phone}</div>}
+                                {errors.phone && (
+                                    <div className="mt-1 text-xs text-red-500">
+                                        {errors.phone}
+                                    </div>
+                                )}
                             </div>
 
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-600">NIK</label>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-600">
+                                    NIK
+                                </label>
                                 <input
                                     type="text"
                                     inputMode="numeric"
@@ -121,68 +159,121 @@ export default function Register() {
                                     className={`block w-full rounded-lg border px-3.5 py-2.5 text-sm shadow-sm ${nikInputClass}`}
                                     value={data.identity_number}
                                     onKeyDown={preventNonNumericKey}
-                                    onChange={(e) => setData('identity_number', digitsOnly(e.target.value).slice(0, 16))}
+                                    onChange={(e) =>
+                                        setData(
+                                            'identity_number',
+                                            digitsOnly(e.target.value).slice(
+                                                0,
+                                                16,
+                                            ),
+                                        )
+                                    }
                                 />
                                 {nikStarted && (
-                                    <div className={`mt-1 text-xs ${nikIs16 ? 'text-green-600' : 'text-red-500'}`}>
-                                        {nikIs16 ? 'NIK sudah 16 digit.' : `NIK harus 16 digit (kurang ${16 - data.identity_number.length} digit).`}
+                                    <div
+                                        className={`mt-1 text-xs ${nikIs16 ? 'text-green-600' : 'text-red-500'}`}
+                                    >
+                                        {nikIs16
+                                            ? 'NIK sudah 16 digit.'
+                                            : `NIK harus 16 digit (kurang ${16 - data.identity_number.length} digit).`}
                                     </div>
                                 )}
-                                {errors.identity_number && <div className="mt-1 text-xs text-red-500">{errors.identity_number}</div>}
+                                {errors.identity_number && (
+                                    <div className="mt-1 text-xs text-red-500">
+                                        {errors.identity_number}
+                                    </div>
+                                )}
                             </div>
 
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-600">Tanggal Lahir</label>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-600">
+                                    Tanggal Lahir
+                                </label>
                                 <input
                                     type="date"
                                     className="block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
                                     value={data.date_of_birth}
-                                    onChange={(e) => setData('date_of_birth', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('date_of_birth', e.target.value)
+                                    }
                                 />
-                                {errors.date_of_birth && <div className="mt-1 text-xs text-red-500">{errors.date_of_birth}</div>}
+                                {errors.date_of_birth && (
+                                    <div className="mt-1 text-xs text-red-500">
+                                        {errors.date_of_birth}
+                                    </div>
+                                )}
                             </div>
 
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-600">Jenis Kelamin</label>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-600">
+                                    Jenis Kelamin
+                                </label>
                                 <select
                                     className="block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
                                     value={data.gender}
-                                    onChange={(e) => setData('gender', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('gender', e.target.value)
+                                    }
                                 >
                                     <option value="">Pilih</option>
                                     <option value="male">Laki-laki</option>
                                     <option value="female">Perempuan</option>
                                 </select>
-                                {errors.gender && <div className="mt-1 text-xs text-red-500">{errors.gender}</div>}
+                                {errors.gender && (
+                                    <div className="mt-1 text-xs text-red-500">
+                                        {errors.gender}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         <div>
-                            <label className="mb-1.5 block text-sm font-medium text-slate-600">Alamat</label>
+                            <label className="mb-1.5 block text-sm font-medium text-slate-600">
+                                Alamat
+                            </label>
                             <textarea
                                 rows={3}
                                 className="block w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
                                 value={data.address}
-                                onChange={(e) => setData('address', e.target.value)}
+                                onChange={(e) =>
+                                    setData('address', e.target.value)
+                                }
                             />
-                            {errors.address && <div className="mt-1 text-xs text-red-500">{errors.address}</div>}
+                            {errors.address && (
+                                <div className="mt-1 text-xs text-red-500">
+                                    {errors.address}
+                                </div>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-600">Password</label>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-600">
+                                    Password
+                                </label>
                                 <input
                                     type="password"
                                     className={`block w-full rounded-lg border px-3.5 py-2.5 text-sm shadow-sm ${passwordInputClass}`}
                                     value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('password', e.target.value)
+                                    }
                                 />
-                                {errors.password && <div className="mt-1 text-xs text-red-500">{errors.password}</div>}
+                                {errors.password && (
+                                    <div className="mt-1 text-xs text-red-500">
+                                        {errors.password}
+                                    </div>
+                                )}
                                 {passwordStarted && (
                                     <div className="mt-2 space-y-1">
                                         {passwordRules.map((rule) => (
-                                            <div key={rule.label} className={`flex items-center gap-2 text-xs ${rule.passed ? 'text-green-600' : 'text-red-500'}`}>
-                                                <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${rule.passed ? 'bg-green-100' : 'bg-red-100'}`}>
+                                            <div
+                                                key={rule.label}
+                                                className={`flex items-center gap-2 text-xs ${rule.passed ? 'text-green-600' : 'text-red-500'}`}
+                                            >
+                                                <span
+                                                    className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${rule.passed ? 'bg-green-100' : 'bg-red-100'}`}
+                                                >
                                                     {rule.passed ? 'OK' : '!'}
                                                 </span>
                                                 <span>{rule.label}</span>
@@ -193,24 +284,40 @@ export default function Register() {
                             </div>
 
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-600">Konfirmasi Password</label>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-600">
+                                    Konfirmasi Password
+                                </label>
                                 <input
                                     type="password"
                                     className={`block w-full rounded-lg border px-3.5 py-2.5 text-sm shadow-sm ${confirmationInputClass}`}
                                     value={data.password_confirmation}
-                                    onChange={(e) => setData('password_confirmation', e.target.value)}
+                                    onChange={(e) =>
+                                        setData(
+                                            'password_confirmation',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
                                 {confirmationStarted && (
-                                    <div className={`mt-1 text-xs ${confirmationMatches ? 'text-green-600' : 'text-red-500'}`}>
-                                        {confirmationMatches ? 'Konfirmasi password cocok.' : 'Konfirmasi password belum cocok.'}
+                                    <div
+                                        className={`mt-1 text-xs ${confirmationMatches ? 'text-green-600' : 'text-red-500'}`}
+                                    >
+                                        {confirmationMatches
+                                            ? 'Konfirmasi password cocok.'
+                                            : 'Konfirmasi password belum cocok.'}
                                     </div>
                                 )}
-                                {errors.password_confirmation && <div className="mt-1 text-xs text-red-500">{errors.password_confirmation}</div>}
+                                {errors.password_confirmation && (
+                                    <div className="mt-1 text-xs text-red-500">
+                                        {errors.password_confirmation}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-                            Password wajib memakai minimal 8 karakter, huruf besar-kecil, angka, dan simbol.
+                            Password wajib memakai minimal 8 karakter, huruf
+                            besar-kecil, angka, dan simbol.
                         </div>
 
                         <button
@@ -224,7 +331,10 @@ export default function Register() {
 
                     <div className="mt-6 text-center text-sm text-slate-500">
                         Sudah punya akun?{' '}
-                        <Link href="/login" className="font-semibold text-cyan-600 hover:text-cyan-700">
+                        <Link
+                            href="/login"
+                            className="font-semibold text-cyan-600 hover:text-cyan-700"
+                        >
                             Masuk
                         </Link>
                     </div>

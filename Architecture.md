@@ -30,15 +30,15 @@ The application must provide:
 
 1. Multi-role authentication for Admin, Apoteker, Kasir, and Pasien/Pelanggan.
 2. Medicine catalog with search, filter, product detail, image preview, and stock visibility.
-3. Online purchasing flow using cart, checkout, payment simulation, and prescription upload.
-4. Offline cashier transaction flow integrated with the same stock system.
+3. Online purchasing flow using cart, checkout, Midtrans payment gateway integration, and prescription upload.
+4. Offline cashier transaction flow (POS) integrated with the same stock system.
 5. Medicine stock management using FIFO logic based on medicine batch expiration date.
 6. Prescription verification by Apoteker for medicines that require a prescription.
 7. Dashboard for sales, stock, revenue, critical stock, expiring medicine, and order monitoring.
 8. Notifications for order status, critical stock, expiring medicine, and application errors.
-9. Reports with SQL-based summaries and PDF export.
+9. Reports with SQL-based summaries, background PDF/Excel exports, and import capabilities.
 10. Audit log and error log for system traceability.
-11. Queue/background job implementation for import, report generation, stock update, and payment simulation.
+11. Queue/background job implementation for import, report generation, stock update, and Midtrans webhook notifications.
 
 ---
 
@@ -111,10 +111,10 @@ app/
 ├── Http/
 │   ├── Controllers/
 │   │   ├── Admin/
-│   │   ├── Apothecary/
+│   │   ├── Apoteker/
 │   │   ├── Cashier/
 │   │   ├── Customer/
-│   │   └── Shared/
+│   │   └── Auth/
 │   ├── Middleware/
 │   ├── Requests/
 │   └── Resources/
@@ -146,7 +146,7 @@ resources/js/
 │   └── Notifications/
 ├── Pages/
 │   ├── Admin/
-│   ├── Apothecary/
+│   ├── Pharmacist/
 │   ├── Cashier/
 │   ├── Customer/
 │   ├── Auth/
@@ -174,7 +174,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Admin routes
 });
 
-Route::middleware(['auth', 'role:apoteker'])->prefix('apoteker')->name('apoteker.')->group(function () {
+Route::middleware(['auth', 'role:apoteker'])->prefix('pharmacist')->name('pharmacist.')->group(function () {
     // Apoteker routes
 });
 
@@ -277,7 +277,7 @@ Features:
 - Validate stock before checkout
 - Require prescription upload if cart contains prescription-only medicine
 - Create order
-- Simulate payment method
+- Integrate with Midtrans payment gateway
 - Send notification to customer and apoteker
 
 Important rule:
@@ -380,14 +380,14 @@ Features:
 Frontend pages:
 
 ```text
-resources/js/Pages/Cashier/Sales/Create.jsx
-resources/js/Pages/Cashier/Sales/Show.jsx
+resources/js/Pages/Cashier/Pos/Index.jsx
+resources/js/Pages/Cashier/Dashboard.jsx
 ```
 
 Backend controllers:
 
 ```text
-app/Http/Controllers/Cashier/SaleController.php
+app/Http/Controllers/Cashier/PosController.php
 ```
 
 ---
@@ -422,7 +422,7 @@ Order rules:
 
 - Order is created after checkout.
 - If order contains prescription-only medicine, status becomes `waiting_prescription_verification`.
-- If no prescription is required, status becomes `waiting_payment` or `paid` depending on payment simulation.
+- If no prescription is required, status becomes `waiting_payment` and processed via Midtrans, or `paid` for POS offline transactions.
 - Stock is deducted only when order is approved and ready to be processed.
 - All order status changes must be logged.
 
@@ -454,8 +454,8 @@ Reports:
 
 Export:
 
-- PDF using DomPDF
-- Excel/CSV import/export using Maatwebsite Excel
+- PDF using DomPDF (includes background queue jobs)
+- Excel/CSV import/export using Maatwebsite Excel (includes background queue jobs)
 
 Recommended service:
 
@@ -505,7 +505,7 @@ Queue jobs:
 - Import medicine CSV/Excel
 - Generate large sales report
 - Send notifications
-- Simulate payment processing
+- Process Midtrans webhook notifications
 - Update stock after order processing
 - Check expiring medicine
 - Check critical stock
@@ -740,8 +740,9 @@ updated_at
 
 ### Payment Rules
 
-- Payment is simulated for this prototype.
-- No real payment gateway is required unless explicitly implemented.
+- Terintegrasi dengan payment gateway Midtrans untuk pesanan online.
+- Sistem menggunakan webhook notification untuk menerima update status dari Midtrans (`/payments/midtrans/notification`).
+- Pembayaran offline menggunakan Point of Sales (POS) oleh kasir dengan status pembayaran instan.
 - Payment status must be stored separately from order status.
 
 ### Security Rules
@@ -778,22 +779,20 @@ updated_at
 ### Apoteker Pages
 
 ```text
-/apoteker/dashboard
-/apoteker/stock
-/apoteker/batches
-/apoteker/prescriptions
-/apoteker/orders
-/apoteker/critical-stock
-/apoteker/expiring-medicines
+/pharmacist/dashboard
+/pharmacist/movements
+/pharmacist/batches
+/pharmacist/prescriptions
+/pharmacist/orders
+/pharmacist/prescription-history
 ```
 
 ### Kasir Pages
 
 ```text
-/kasir/dashboard
-/kasir/sales/create
-/kasir/sales
-/kasir/stock
+/cashier/dashboard
+/cashier/pos
+/cashier/payments
 ```
 
 ### Customer Pages
@@ -1103,7 +1102,6 @@ When modifying or generating code for this project, follow these rules:
 Do not implement these unless explicitly requested:
 
 - Native mobile application
-- Real payment gateway production integration
 - Real courier integration
 - OCR prescription reading
 - Machine learning prescription validation

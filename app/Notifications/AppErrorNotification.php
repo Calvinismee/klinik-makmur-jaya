@@ -3,21 +3,17 @@
 namespace App\Notifications;
 
 use App\Models\ErrorLog;
+use App\Notifications\Concerns\ChoosesNotificationChannels;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class AppErrorNotification extends Notification
 {
-    use Queueable;
+    use Queueable, ChoosesNotificationChannels;
 
     public function __construct(private ErrorLog $errorLog)
     {
-    }
-
-    public function via(object $notifiable): array
-    {
-        return ['database', 'mail'];
     }
 
     public function toDatabase(object $notifiable): array

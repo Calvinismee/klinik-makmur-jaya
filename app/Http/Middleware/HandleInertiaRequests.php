@@ -44,6 +44,11 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
             ],
+            'security' => [
+                'sessionLifetimeMinutes' => (int) config('session.lifetime'),
+                'sessionWarningSeconds' => 60,
+                'notificationPollSeconds' => 15,
+            ],
             'navNotifications' => fn () => $this->navNotifications($request),
             'notifications' => fn () => $this->notifications($request),
         ];
@@ -58,21 +63,15 @@ class HandleInertiaRequests extends Middleware
         }
 
         if ($user->hasRole('kasir')) {
-            return [
-                'cashierOnlinePayments' => \App\Models\Order::where('order_number', 'like', 'ORD-%')
-                    ->where(function ($query) {
-                        $query->where(function ($manualPayment) {
-                            $manualPayment->where('order_status', 'waiting_payment')
-                                ->whereNull('payment_provider');
-                        })->orWhereIn('order_status', ['processing', 'ready_to_pickup']);
-                    })
-                    ->count(),
-            ];
+            return [];
         }
 
         if ($user->hasRole('apoteker')) {
             return [
                 'pendingPrescriptions' => \App\Models\Order::where('prescription_status', 'pending')->count(),
+                'pharmacistProcessingOrders' => \App\Models\Order::where('order_number', 'like', 'ORD-%')
+                    ->where('order_status', 'processing')
+                    ->count(),
             ];
         }
 

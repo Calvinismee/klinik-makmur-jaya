@@ -15,7 +15,7 @@ export default function PharmacistDashboard({ stats, lowStockMedicines, expiring
                 <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
                     <div className="text-gray-500 text-sm font-semibold uppercase mb-1">Pesanan untuk Diproses</div>
                     <div className="text-2xl font-bold text-gray-800 mb-2">{stats.ordersToProcess}</div>
-                    <Link href="/pharmacist/orders" className="text-blue-600 hover:underline text-sm font-medium">Manage Orders &rarr;</Link>
+                    <Link href="/pharmacist/orders" className="text-blue-600 hover:underline text-sm font-medium">Siapkan Pesanan &rarr;</Link>
                 </div>
             </div>
 

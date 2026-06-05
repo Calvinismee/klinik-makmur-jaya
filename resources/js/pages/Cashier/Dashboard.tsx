@@ -33,14 +33,10 @@ export default function Dashboard({ stats, recentTransactions }: { stats: any; r
             <h1 className="text-2xl font-bold mb-6">Ringkasan Kasir</h1>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                 <div className="bg-white rounded-lg shadow-sm p-5 border-l-4 border-blue-500">
                     <div className="text-gray-500 text-xs font-semibold uppercase mb-1">Transaksi Offline Hari Ini</div>
                     <div className="text-3xl font-bold text-gray-800">{stats.transaksi_hari_ini}</div>
-                </div>
-                <div className="bg-white rounded-lg shadow-sm p-5 border-l-4 border-orange-500">
-                    <div className="text-gray-500 text-xs font-semibold uppercase mb-1">Perlu Ditindaklanjuti (Online)</div>
-                    <div className="text-3xl font-bold text-gray-800">{stats.menunggu_pembayaran}</div>
                 </div>
                 <div className="bg-white rounded-lg shadow-sm p-5 border-l-4 border-green-500">
                     <div className="text-gray-500 text-xs font-semibold uppercase mb-1">Total Penerimaan Hari Ini</div>
@@ -53,20 +49,13 @@ export default function Dashboard({ stats, recentTransactions }: { stats: any; r
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-1 gap-4 mb-8">
                 <Link href="/cashier/pos" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-5 text-center transition shadow-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
                     <div className="font-bold text-lg">Pembayaran Offline</div>
                     <div className="text-sm text-blue-100 mt-1">Lakukan transaksi penjualan langsung (offline)</div>
-                </Link>
-                <Link href="/cashier/payments" className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg p-5 text-center transition shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
-                    <div className="font-bold text-lg">Kelola Pembayaran</div>
-                    <div className="text-sm text-emerald-100 mt-1">Kelola pembayaran dan kesiapan pesanan online</div>
                 </Link>
             </div>
 

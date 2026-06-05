@@ -111,7 +111,7 @@ export default function Dashboard({ stats, recentOrders }: { stats: any; recentO
                                 {recentOrders.map((order: any) => (
                                     <tr key={order.id} className="hover:bg-gray-50">
                                         <td className="px-4 py-3 whitespace-nowrap">
-                                            <Link href={`/customer/orders/${order.id}`} className="text-blue-600 hover:underline font-medium">
+                                            <Link href={`/customer/orders/${order.order_number}`} className="text-blue-600 hover:underline font-medium">
                                                 #{order.order_number}
                                             </Link>
                                         </td>

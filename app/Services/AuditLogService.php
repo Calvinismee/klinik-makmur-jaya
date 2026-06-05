@@ -11,11 +11,11 @@ use Throwable;
 
 class AuditLogService
 {
-    public static function log(string $action, string $module, string $description = null)
+    public static function log(string $action, string $module, string $description = null, ?int $userId = null)
     {
         try {
             AuditLog::create([
-                'user_id' => auth()->id(),
+                'user_id' => $userId ?? auth()->id(),
                 'action' => $action,
                 'module' => $module,
                 'description' => $description,

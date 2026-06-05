@@ -29,14 +29,26 @@ class OrderController extends Controller
         if ($request->has('sync_payment') || $request->has('transaction_status') || $request->has('status_code') || $request->has('order_id')) {
             try {
                 $payload = $midtransPaymentService->getTransactionStatus($order);
-                $orderService->applyMidtransNotification($order->order_number, $payload);
+                $syncedOrder = $orderService->applyMidtransNotification($order->order_number, $payload);
+
+                if ($syncedOrder->payment_status === 'paid') {
+                    return redirect()
+                        ->route('customer.orders.show', ['order' => $order->order_number])
+                        ->with('success', 'Pembayaran berhasil diverifikasi Midtrans.');
+                }
+
+                if ($syncedOrder->payment_status === 'failed') {
+                    return redirect()
+                        ->route('customer.orders.show', ['order' => $order->order_number])
+                        ->withErrors(['message' => 'Pembayaran gagal, dibatalkan, atau kedaluwarsa. Silakan ulangi pembayaran jika masih ingin melanjutkan pesanan.']);
+                }
 
                 return redirect()
-                    ->route('customer.orders.show', $order)
-                    ->with('success', 'Status pembayaran berhasil diperbarui.');
+                    ->route('customer.orders.show', ['order' => $order->order_number])
+                    ->with('success', 'Midtrans masih memproses pembayaran. Silakan cek kembali beberapa saat lagi.');
             } catch (\Exception $e) {
                 return redirect()
-                    ->route('customer.orders.show', $order)
+                    ->route('customer.orders.show', ['order' => $order->order_number])
                     ->withErrors(['message' => $e->getMessage()]);
             }
         }
@@ -58,7 +70,7 @@ class OrderController extends Controller
             $midtransPaymentService->createSnapTransaction($order);
 
             return redirect()
-                ->route('customer.orders.show', ['order' => $order->id, 'pay' => 1])
+                ->route('customer.orders.show', ['order' => $order->order_number, 'pay' => 1])
                 ->with('success', 'Silakan lanjutkan pembayaran.');
         } catch (\Exception $e) {
             return back()->withErrors(['message' => $e->getMessage()]);

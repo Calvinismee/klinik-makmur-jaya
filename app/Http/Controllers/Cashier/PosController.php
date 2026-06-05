@@ -74,10 +74,6 @@ class PosController extends Controller
 
         $medicine = Medicine::find($request->medicine_id);
 
-        if ($medicine->requires_prescription) {
-            return back()->withErrors(['message' => "{$medicine->name} memerlukan resep. Harap pelanggan melakukan pemesanan via sistem untuk verifikasi Apoteker."]);
-        }
-
         if (isset($cart[$medicine->id])) {
             $cart[$medicine->id]['quantity'] += $request->quantity;
         } else {
@@ -118,6 +114,13 @@ class PosController extends Controller
         }
 
         return back();
+    }
+
+    public function clearCart()
+    {
+        Session::forget($this->sessionKey);
+
+        return back()->with('success', 'Semua pesanan berhasil dikosongkan.');
     }
 
     public function checkout(Request $request)

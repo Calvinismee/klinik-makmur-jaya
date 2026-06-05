@@ -5,6 +5,23 @@ import AppLayout from '../../../Layouts/AppLayout';
 export default function PosIndex({ medicines, cart, subtotal, filters }: { medicines: any, cart: any[], subtotal: number, filters: any }) {
     const [search, setSearch] = useState(filters.search || '');
     const [notes, setNotes] = useState('');
+    const [showClearCartModal, setShowClearCartModal] = useState(false);
+    const [isClearingCart, setIsClearingCart] = useState(false);
+    const cartQuantityByMedicine = cart.reduce<Record<number, number>>((totals, item) => {
+        totals[item.id] = Number(item.quantity || 0);
+        return totals;
+    }, {});
+
+    const medicinesWithCartState = medicines.data.map((med: any) => {
+        const cartQuantity = cartQuantityByMedicine[med.id] || 0;
+        const availableStock = Number(med.available_stock || 0);
+
+        return {
+            ...med,
+            cartQuantity,
+            availableForSale: Math.max(availableStock - cartQuantity, 0),
+        };
+    });
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,6 +51,18 @@ export default function PosIndex({ medicines, cart, subtotal, filters }: { medic
         }
     };
 
+    const clearCart = () => {
+        router.post('/cashier/pos/clear', {}, {
+            preserveScroll: true,
+            onStart: () => setIsClearingCart(true),
+            onSuccess: () => {
+                setNotes('');
+                setShowClearCartModal(false);
+            },
+            onFinish: () => setIsClearingCart(false),
+        });
+    };
+
     return (
         <AppLayout title="Pembayaran Offline">
             <div className="flex flex-col lg:flex-row gap-6">
@@ -51,27 +80,49 @@ export default function PosIndex({ medicines, cart, subtotal, filters }: { medic
                         <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Search</button>
                     </form>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 h-[600px] overflow-y-auto pr-2">
-                        {medicines.data.map((med: any) => (
-                            <div key={med.id} className="border rounded p-3 flex flex-col hover:border-blue-500 cursor-pointer transition" onClick={() => med.available_stock > 0 && addToCart(med.id)}>
-                                <div className="text-sm font-bold mb-1 truncate" title={med.name}>{med.name}</div>
-                                <div className="text-xs text-gray-500 mb-2">{med.code}</div>
-                                <div className="text-blue-600 font-bold mb-2">Rp {Number(med.price).toLocaleString('id-ID')}</div>
-                                <div className="mt-auto text-xs font-semibold">
-                                    {med.available_stock > 0 ? (
-                                        <span className="text-green-600">Stok: {med.available_stock}</span>
+                    <div className="grid grid-cols-2 auto-rows-max gap-4 overflow-y-auto pr-2 sm:grid-cols-3 lg:grid-cols-4 max-h-[calc(100vh-260px)]">
+                        {medicinesWithCartState.map((med: any) => (
+                            <button
+                                key={med.id}
+                                type="button"
+                                className="flex h-36 flex-col rounded border p-3 text-left transition hover:border-blue-500 hover:shadow-sm disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:opacity-70"
+                                onClick={() => addToCart(med.id)}
+                                disabled={med.availableForSale <= 0}
+                            >
+                                <div className="min-w-0">
+                                    <div className="truncate text-sm font-bold" title={med.name}>{med.name}</div>
+                                    <div className="mt-1 text-xs text-gray-500">{med.code}</div>
+                                </div>
+                                <div className="mt-3 text-base font-bold text-blue-600">Rp {Number(med.price).toLocaleString('id-ID')}</div>
+                                <div className="mt-auto flex items-end justify-between gap-2 text-xs font-semibold">
+                                    {med.availableForSale > 0 ? (
+                                        <span className="text-green-600">Stok: {med.availableForSale}</span>
                                     ) : (
                                         <span className="text-red-600">Stok Habis</span>
                                     )}
+                                    {med.cartQuantity > 0 && (
+                                        <span className="rounded bg-blue-50 px-2 py-1 text-blue-700">Di pesanan: {med.cartQuantity}</span>
+                                    )}
                                 </div>
-                            </div>
+                            </button>
                         ))}
                     </div>
                 </div>
 
                 {/* Keranjang Section */}
                 <div className="lg:w-96 bg-white rounded-lg shadow-sm p-4 flex flex-col h-[700px]">
-                    <h2 className="text-xl font-bold mb-4 border-b pb-2">Pesanan Saat Ini</h2>
+                    <div className="mb-4 flex items-center justify-between gap-3 border-b pb-2">
+                        <h2 className="text-xl font-bold">Pesanan Saat Ini</h2>
+                        {cart.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setShowClearCartModal(true)}
+                                className="rounded border border-red-200 px-3 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+                            >
+                                Kosongkan
+                            </button>
+                        )}
+                    </div>
                     
                     <div className="flex-1 overflow-y-auto mb-4 border-b">
                         {cart.length === 0 ? (
@@ -88,7 +139,7 @@ export default function PosIndex({ medicines, cart, subtotal, filters }: { medic
                                             <div className="flex items-center border rounded">
                                                 <button className="px-2 py-1 text-sm bg-gray-100" onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
                                                 <span className="px-3 text-sm">{item.quantity}</span>
-                                                <button className="px-2 py-1 text-sm bg-gray-100" onClick={() => updateQuantity(item.id, item.quantity + 1)} disabled={!item.in_stock}>+</button>
+                                                <button className="px-2 py-1 text-sm bg-gray-100 disabled:opacity-40" onClick={() => updateQuantity(item.id, item.quantity + 1)} disabled={item.quantity >= item.available_stock}>+</button>
                                             </div>
                                             <div className="font-bold text-sm text-blue-600">Rp {Number(item.price * item.quantity).toLocaleString('id-ID')}</div>
                                         </div>
@@ -126,6 +177,35 @@ export default function PosIndex({ medicines, cart, subtotal, filters }: { medic
                 </div>
 
             </div>
+
+            {showClearCartModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+                    <div className="w-full max-w-sm rounded-lg bg-white p-5 shadow-xl">
+                        <h3 className="text-lg font-bold text-gray-900">Kosongkan pesanan?</h3>
+                        <p className="mt-2 text-sm text-gray-600">
+                            Semua item di Pesanan Saat Ini akan dihapus. Stok di katalog akan kembali sesuai jumlah yang tersedia.
+                        </p>
+                        <div className="mt-5 flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setShowClearCartModal(false)}
+                                className="rounded border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                                disabled={isClearingCart}
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={clearCart}
+                                className="rounded bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
+                                disabled={isClearingCart}
+                            >
+                                {isClearingCart ? 'Mengosongkan...' : 'Kosongkan'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AppLayout>
     );
 }

@@ -98,7 +98,7 @@ class MidtransPaymentService
                 'name' => Str::limit($item->medicine?->name ?? 'Obat', 45, ''),
             ])->values()->all(),
             'callbacks' => [
-                'finish' => route('customer.orders.show', $order),
+                'finish' => route('customer.orders.show', ['order' => $order->order_number]),
             ],
         ];
     }

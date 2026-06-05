@@ -57,6 +57,9 @@ Route::post('email/verification-notification', function (Request $request) {
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 Route::post('logout', [LoginController::class, 'destroy'])->name('logout')->middleware('auth');
+Route::post('session/keep-alive', fn () => back()->with('success', 'Session diperpanjang.'))
+    ->middleware('auth')
+    ->name('session.keep-alive');
 Route::post('notifications/read-all', [NotificationController::class, 'readAll'])
     ->middleware('auth')
     ->name('notifications.read-all');
@@ -82,6 +85,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('medicines', MedicineController::class)->except(['create', 'show', 'edit']);
     Route::resource('users', UserController::class)->except(['create', 'show', 'edit']);
     Route::get('orders/export', [AdminOrderController::class, 'export'])->name('orders.export');
+    Route::post('orders/export/excel/background', [AdminOrderController::class, 'generateExcel'])->name('orders.export-excel-background');
+    Route::get('orders/export/pdf', [AdminOrderController::class, 'exportPdf'])->name('orders.export-pdf');
+    Route::post('orders/export/pdf/background', [AdminOrderController::class, 'generatePdf'])->name('orders.export-pdf-background');
+    Route::get('reports/{reportJob}/status', [AdminOrderController::class, 'reportStatus'])->name('reports.status');
+    Route::get('reports/download/{filename}', [AdminOrderController::class, 'downloadReport'])->name('reports.download');
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     
     Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
@@ -102,13 +110,15 @@ Route::middleware(['auth', 'role:apoteker'])->prefix('pharmacist')->name('pharma
     Route::resource('batches', MedicineBatchController::class)->only(['index', 'store']);
     Route::get('movements', [StockMovementController::class, 'index'])->name('movements.index');
 
+    Route::get('orders', [ApotekerOrderController::class, 'index'])->name('orders.index');
+    Route::post('orders/bulk-ready', [ApotekerOrderController::class, 'bulkReady'])->name('orders.bulk-ready');
+    Route::post('orders/{order}/ready', [ApotekerOrderController::class, 'ready'])->name('orders.ready');
     Route::get('prescription-history', [PrescriptionController::class, 'history'])->name('prescriptions.history');
     Route::get('prescriptions', [PrescriptionController::class, 'index'])->name('prescriptions.index');
     Route::post('prescriptions/{order}/verify', [PrescriptionController::class, 'verify'])->name('prescriptions.verify');
 });
 
 use App\Http\Controllers\Cashier\PosController;
-use App\Http\Controllers\Cashier\PaymentController;
 
 Route::middleware(['auth', 'role:kasir'])->prefix('cashier')->name('cashier.')->group(function () {
     Route::get('/dashboard', function () {
@@ -117,14 +127,6 @@ Route::middleware(['auth', 'role:kasir'])->prefix('cashier')->name('cashier.')->
         $stats = [
             'transaksi_hari_ini' => \App\Models\Order::whereDate('created_at', $today)
                 ->where('order_number', 'like', 'POS-%')
-                ->count(),
-            'menunggu_pembayaran' => \App\Models\Order::where('order_number', 'like', 'ORD-%')
-                ->where(function ($query) {
-                    $query->where(function ($manualPayment) {
-                        $manualPayment->where('order_status', 'waiting_payment')
-                            ->whereNull('payment_provider');
-                    })->orWhereIn('order_status', ['processing', 'ready_to_pickup']);
-                })
                 ->count(),
             'penerimaan_hari_ini' => \App\Models\Order::whereDate('updated_at', $today)
                 ->where('payment_status', 'paid')
@@ -146,13 +148,12 @@ Route::middleware(['auth', 'role:kasir'])->prefix('cashier')->name('cashier.')->
     Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
     Route::post('/pos/add', [PosController::class, 'addToCart'])->name('pos.add');
     Route::post('/pos/update', [PosController::class, 'updateCart'])->name('pos.update');
+    Route::post('/pos/clear', [PosController::class, 'clearCart'])->name('pos.clear');
     Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
 
-    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
-    Route::post('/payments/{order}', [PaymentController::class, 'process'])->name('payments.process');
-    Route::post('/payments/{order}/ready', [PaymentController::class, 'ready'])->name('payments.ready');
-    Route::post('/payments/{order}/complete', [PaymentController::class, 'complete'])->name('payments.complete');
-    Route::post('/payments/{order}/cancel', [PaymentController::class, 'cancel'])->name('payments.cancel');
+    Route::get('/payments', fn () => redirect()
+        ->route('cashier.dashboard')
+        ->with('success', 'Pembayaran online diproses otomatis oleh sistem.'))->name('payments.index');
 });
 
 use App\Http\Controllers\Customer\CatalogController;
@@ -193,6 +194,6 @@ Route::middleware(['auth', 'verified', 'role:pasien'])->prefix('customer')->name
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::post('/orders/{order}/pay', [OrderController::class, 'pay'])->name('orders.pay');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order:order_number}/pay', [OrderController::class, 'pay'])->name('orders.pay');
+    Route::get('/orders/{order:order_number}', [OrderController::class, 'show'])->name('orders.show');
 });

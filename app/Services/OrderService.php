@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Models\User;
+use App\Notifications\NewProcessingOrderNotification;
 use App\Notifications\OrderStatusNotification;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -69,6 +71,7 @@ class OrderService
             $order->order_status = 'processing';
             $order->save();
             $this->notifyCustomer($order);
+            $this->notifyPharmacistsProcessingOrder($order);
 
             return $order;
         });
@@ -104,6 +107,7 @@ class OrderService
             $order->paid_at = now();
             $order->save();
             $this->notifyCustomer($order);
+            $this->notifyPharmacistsProcessingOrder($order);
 
             return $order;
         });
@@ -117,6 +121,11 @@ class OrderService
 
             $transactionStatus = $payload['transaction_status'] ?? null;
             $fraudStatus = $payload['fraud_status'] ?? null;
+            $statusCode = (string) ($payload['status_code'] ?? '');
+
+            if (($payload['order_id'] ?? $orderNumber) !== $orderNumber) {
+                throw new Exception("Midtrans order ID does not match order number.");
+            }
 
             $order->forceFill([
                 'payment_provider' => 'midtrans',
@@ -126,7 +135,7 @@ class OrderService
                 'midtrans_fraud_status' => $fraudStatus,
             ]);
 
-            if ($this->isMidtransPaid($transactionStatus, $fraudStatus)) {
+            if ($this->isMidtransPaid($transactionStatus, $fraudStatus) && ($statusCode === '' || $statusCode === '200')) {
                 if ($order->order_status !== 'waiting_payment' && $order->payment_status !== 'paid') {
                     throw new Exception("Order cannot be paid from current state.");
                 }
@@ -157,6 +166,7 @@ class OrderService
 
                 if ($isNewPayment) {
                     $this->notifyCustomer($order);
+                    $this->notifyPharmacistsProcessingOrder($order);
                 }
             } elseif ($transactionStatus === 'pending') {
                 if ($order->payment_status !== 'paid') {
@@ -257,6 +267,21 @@ class OrderService
             new OrderStatusNotification($order, $label ?? $defaultLabel, $message ?? $defaultMessage),
             "order_status:{$order->id}:{$order->order_status}:{$order->payment_status}"
         );
+    }
+
+    private function notifyPharmacistsProcessingOrder(Order $order): void
+    {
+        if (!str_starts_with($order->order_number, 'ORD-') || $order->order_status !== 'processing') {
+            return;
+        }
+
+        User::role('apoteker')->get()->each(function (User $apoteker) use ($order) {
+            NotificationDispatchService::sendOnce(
+                $apoteker,
+                new NewProcessingOrderNotification($order),
+                "processing_order:{$order->id}"
+            );
+        });
     }
 
     private function markPrescriptionVerificationNotificationsRead(Order $order): void

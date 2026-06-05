@@ -8,7 +8,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class NewPrescriptionOrderNotification extends Notification
+class NewProcessingOrderNotification extends Notification
 {
     use Queueable, ChoosesNotificationChannels;
 
@@ -19,22 +19,22 @@ class NewPrescriptionOrderNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return [
-            'type' => 'prescription_verification',
-            'title' => 'Resep baru perlu diverifikasi',
+            'type' => 'processing_order',
+            'title' => 'Pesanan perlu disiapkan',
+            'severity' => 'info',
             'order_id' => $this->order->id,
             'order_number' => $this->order->order_number,
-            'severity' => 'warning',
-            'dedupe_key' => "prescription_verification:{$this->order->id}",
-            'message' => "Pesanan #{$this->order->order_number} menunggu verifikasi resep.",
-            'url' => '/pharmacist/prescriptions',
+            'dedupe_key' => "processing_order:{$this->order->id}",
+            'message' => "Pesanan #{$this->order->order_number} sudah dibayar dan perlu disiapkan.",
+            'url' => '/pharmacist/orders',
         ];
     }
 
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Resep Baru Perlu Diverifikasi')
-            ->line("Pesanan #{$this->order->order_number} menunggu verifikasi resep.")
-            ->action('Buka Verifikasi Resep', url('/pharmacist/prescriptions'));
+            ->subject('Pesanan Perlu Disiapkan')
+            ->line("Pesanan #{$this->order->order_number} sudah dibayar dan masuk antrean apoteker.")
+            ->action('Lihat Pesanan', url('/pharmacist/orders'));
     }
 }

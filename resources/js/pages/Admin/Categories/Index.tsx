@@ -42,7 +42,7 @@ export default function CategoriesIndex({ categories }: { categories: any[] }) {
     return (
         <AppLayout title="Kelola Kategori">
             <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-                <h2 className="text-lg font-bold mb-4">{editingId ? 'Edit Kategori' : 'Add New Kategori'}</h2>
+                <h2 className="text-lg font-bold mb-4">{editingId ? 'Edit Kategori' : 'Tambah Kategori'}</h2>
                 <form onSubmit={submit} className="flex flex-col gap-4 max-w-md">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Nama</label>

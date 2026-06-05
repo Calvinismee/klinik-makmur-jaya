@@ -44,7 +44,7 @@ export default function CheckoutIndex({ cart, subtotal, hasPrescriptionItems }: 
                                 <p className="mt-1 text-sm text-blue-700">
                                     {hasPrescriptionItems
                                         ? 'Setelah resep disetujui apoteker, Anda dapat membayar melalui dari halaman detail pesanan.'
-                                        : 'Setelah pesanan dibuat, Anda akan diarahkan ke halaman pembayaran Midtrans.'}
+                                        : 'Setelah pesanan dibuat, Anda akan diarahkan ke halaman pembayaran.'}
                                 </p>
                             </div>
 

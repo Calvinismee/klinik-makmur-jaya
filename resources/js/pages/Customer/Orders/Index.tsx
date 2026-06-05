@@ -56,7 +56,7 @@ export default function OrdersIndex({ orders }: { orders: any[] }) {
                                 {orders.map((order) => (
                                     <tr key={order.id}>
                                         <td className="px-6 py-4 whitespace-nowrap font-medium text-blue-600">
-                                            <Link href={`/customer/orders/${order.id}`}>#{order.order_number}</Link>
+                                            <Link href={`/customer/orders/${order.order_number}`}>#{order.order_number}</Link>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {new Date(order.created_at).toLocaleDateString()}
@@ -70,7 +70,7 @@ export default function OrdersIndex({ orders }: { orders: any[] }) {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <Link href={`/customer/orders/${order.id}`} className="text-indigo-600 hover:text-indigo-900">Lihat Detail</Link>
+                                            <Link href={`/customer/orders/${order.order_number}`} className="text-indigo-600 hover:text-indigo-900">Lihat Detail</Link>
                                         </td>
                                     </tr>
                                 ))}

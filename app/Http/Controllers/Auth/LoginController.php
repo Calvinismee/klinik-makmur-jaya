@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -25,6 +26,7 @@ class LoginController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
+            AuditLogService::log('LOGIN', 'auth.login', 'User logged in successfully.', $user->id);
 
             if ($user->hasRole('admin')) {
                 return redirect()->intended(route('admin.dashboard'));
@@ -44,6 +46,11 @@ class LoginController extends Controller
 
     public function destroy(Request $request)
     {
+        $user = $request->user();
+        if ($user) {
+            AuditLogService::log('LOGOUT', 'auth.logout', 'User logged out.', $user->id);
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

@@ -2,14 +2,15 @@
 
 namespace App\Notifications;
 
+use App\Models\MedicineBatch;
+use App\Notifications\Concerns\ChoosesNotificationChannels;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use App\Models\MedicineBatch;
 
 class ExpiringBatchNotification extends Notification
 {
-    use Queueable;
+    use Queueable, ChoosesNotificationChannels;
 
     protected $batch;
     protected int $daysBefore;
@@ -18,11 +19,6 @@ class ExpiringBatchNotification extends Notification
     {
         $this->batch = $batch;
         $this->daysBefore = $daysBefore;
-    }
-
-    public function via(object $notifiable): array
-    {
-        return ['database', 'mail'];
     }
 
     public function toDatabase(object $notifiable): array

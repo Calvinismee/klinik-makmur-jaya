@@ -82,7 +82,7 @@ export default function MedicinesIndex({ medicines, categories, suppliers }: { m
     return (
         <AppLayout title="Kelola Obat">
             <div className="bg-white p-6 rounded-lg shadow-sm mb-6 flex justify-between items-center">
-                <h2 className="text-lg font-bold">Medicines Catalog</h2>
+                <h2 className="text-lg font-bold">Katalog Obat</h2>
                 <div className="flex gap-4 items-center">
                     <div>
                         <label htmlFor="import-excel" className="bg-green-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-green-700 font-bold transition">
@@ -94,7 +94,7 @@ export default function MedicinesIndex({ medicines, categories, suppliers }: { m
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-                <h2 className="text-lg font-bold mb-4">{editingId ? 'Edit Obat' : 'Add New Obat'}</h2>
+                <h2 className="text-lg font-bold mb-4">{editingId ? 'Edit Obat' : 'Tambah Obat'}</h2>
                 <form onSubmit={submit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Kode</label>
@@ -109,7 +109,7 @@ export default function MedicinesIndex({ medicines, categories, suppliers }: { m
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Kategori</label>
                         <select className="mt-1 block w-full rounded-md border p-2" value={data.category_id} onChange={e => setData('category_id', e.target.value)}>
-                            <option value="">Select Kategori</option>
+                            <option value="">Pilih Kategori</option>
                             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                     </div>

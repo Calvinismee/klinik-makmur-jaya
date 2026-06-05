@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ImportMedicinesJob;
 use App\Models\Medicine;
 use App\Models\Category;
 use App\Models\Supplier;
@@ -92,14 +93,16 @@ class MedicineController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:csv,xls,xlsx'
+            'file' => 'required|mimes:csv,xls,xlsx|max:10240'
         ]);
 
         try {
-            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\MedicinesImport, $request->file('file'));
-            return back()->with('success', 'Medicines imported successfully.');
+            $path = $request->file('file')->store('imports/medicines', 'local');
+            ImportMedicinesJob::dispatch($path, auth()->id());
+
+            return back()->with('success', 'Import obat sedang diproses di background. Notifikasi akan muncul setelah selesai.');
         } catch (\Exception $e) {
-            return back()->withErrors(['message' => 'Error importing file: ' . $e->getMessage()]);
+            return back()->withErrors(['message' => 'Gagal menjadwalkan import file: ' . $e->getMessage()]);
         }
     }
 }

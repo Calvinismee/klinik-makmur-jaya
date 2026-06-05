@@ -194,6 +194,7 @@ function getNavSections(role: string): NavSection[] {
                     title: 'PESANAN',
                     items: [
                         { label: 'Verifikasi Resep', href: '/pharmacist/prescriptions', icon: Icons.prescription },
+                        { label: 'Siapkan Pesanan', href: '/pharmacist/orders', icon: Icons.orders },
                         { label: 'Riwayat Verifikasi', href: '/pharmacist/prescription-history', icon: Icons.history },
                     ],
                 },
@@ -210,7 +211,6 @@ function getNavSections(role: string): NavSection[] {
                     title: 'TRANSAKSI',
                     items: [
                         { label: 'Pembayaran Offline', href: '/cashier/pos', icon: Icons.pos },
-                        { label: 'Pembayaran Online', href: '/cashier/payments', icon: Icons.payment },
                     ],
                 },
             ];
@@ -271,6 +271,10 @@ function getBreadcrumbs(pathname: string, role: string): { label: string; href?:
         return [];
     }
 
+    if (segments[0] === 'customer' && segments[1] === 'orders') {
+        return [{ label: 'Pesanan' }];
+    }
+
     const crumbs: { label: string; href?: string }[] = [];
 
     // Only show the page name (skip role prefix)
@@ -288,11 +292,12 @@ function getBreadcrumbs(pathname: string, role: string): { label: string; href?:
 }
 
 export default function AppLayout({ title, children }: Props) {
-    const { auth, flash, errors, navNotifications, notifications: appNotifications } = usePage().props as any;
+    const { auth, flash, errors, navNotifications, notifications: appNotifications, security } = usePage().props as any;
     const currentPath = usePage().url;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [toast, setToast] = useState<ToastState | null>(null);
+    const [sessionWarning, setSessionWarning] = useState(false);
 
     const role = auth?.user?.roles?.[0]?.name || '';
     const navSections = getNavSections(role);
@@ -325,12 +330,12 @@ export default function AppLayout({ title, children }: Props) {
     };
 
     const getNavBadgeCount = (href: string) => {
-        if (href === '/cashier/payments') {
-            return Number(navNotifications?.cashierOnlinePayments || 0);
-        }
-
         if (href === '/pharmacist/prescriptions') {
             return Number(navNotifications?.pendingPrescriptions || 0);
+        }
+
+        if (href === '/pharmacist/orders') {
+            return Number(navNotifications?.pharmacistProcessingOrders || 0);
         }
 
         return 0;
@@ -355,6 +360,57 @@ export default function AppLayout({ title, children }: Props) {
 
         return () => window.clearTimeout(timer);
     }, [noticeMessage, noticeType]);
+
+    useEffect(() => {
+        if (!auth?.user) {
+            return;
+        }
+
+        const pollSeconds = Number(security?.notificationPollSeconds || 15);
+        const poll = window.setInterval(() => {
+            router.reload({
+                only: ['notifications', 'navNotifications'],
+                preserveScroll: true,
+                preserveState: true,
+            });
+        }, pollSeconds * 1000);
+
+        return () => window.clearInterval(poll);
+    }, [auth?.user?.id, security?.notificationPollSeconds]);
+
+    useEffect(() => {
+        if (!auth?.user) {
+            return;
+        }
+
+        const lifetimeMs = Number(security?.sessionLifetimeMinutes || 120) * 60 * 1000;
+        const warningMs = Number(security?.sessionWarningSeconds || 60) * 1000;
+        let lastActivity = Date.now();
+
+        const resetActivity = () => {
+            lastActivity = Date.now();
+            setSessionWarning(false);
+        };
+
+        const events: Array<keyof WindowEventMap> = ['click', 'keydown', 'mousemove', 'scroll', 'touchstart'];
+        events.forEach((event) => window.addEventListener(event, resetActivity, { passive: true }));
+
+        const timer = window.setInterval(() => {
+            const remaining = lifetimeMs - (Date.now() - lastActivity);
+
+            if (remaining <= 0) {
+                router.post('/logout', {}, { preserveScroll: true });
+                return;
+            }
+
+            setSessionWarning(remaining <= warningMs);
+        }, 5000);
+
+        return () => {
+            window.clearInterval(timer);
+            events.forEach((event) => window.removeEventListener(event, resetActivity));
+        };
+    }, [auth?.user?.id, security?.sessionLifetimeMinutes, security?.sessionWarningSeconds]);
 
     const SidebarContent = () => (
         <>
@@ -466,6 +522,23 @@ export default function AppLayout({ title, children }: Props) {
                             {Icons.close}
                         </button>
                     </div>
+                </div>
+            )}
+
+            {sessionWarning && (
+                <div className="fixed bottom-4 right-4 z-[80] w-[calc(100%-2rem)] rounded-lg border border-yellow-200 bg-white p-4 shadow-xl ring-1 ring-black/5 sm:w-96">
+                    <p className="text-sm font-bold text-slate-900">Session hampir berakhir</p>
+                    <p className="mt-1 text-sm text-slate-600">Aktivitas Anda akan logout otomatis jika tidak ada interaksi.</p>
+                    <button
+                        type="button"
+                        onClick={() => router.post('/session/keep-alive', {}, {
+                            preserveScroll: true,
+                            onSuccess: () => setSessionWarning(false),
+                        })}
+                        className="mt-3 rounded bg-yellow-500 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-yellow-600"
+                    >
+                        Tetap aktif
+                    </button>
                 </div>
             )}
 

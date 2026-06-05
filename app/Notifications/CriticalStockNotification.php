@@ -2,14 +2,15 @@
 
 namespace App\Notifications;
 
+use App\Models\Medicine;
+use App\Notifications\Concerns\ChoosesNotificationChannels;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use App\Models\Medicine;
 
 class CriticalStockNotification extends Notification
 {
-    use Queueable;
+    use Queueable, ChoosesNotificationChannels;
 
     protected $medicine;
     protected int $currentStock;
@@ -20,11 +21,6 @@ class CriticalStockNotification extends Notification
         $this->medicine = $medicine;
         $this->currentStock = $currentStock;
         $this->minimumStock = $minimumStock;
-    }
-
-    public function via(object $notifiable): array
-    {
-        return ['database', 'mail'];
     }
 
     public function toDatabase(object $notifiable): array

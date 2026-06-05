@@ -62,7 +62,7 @@ class CheckoutController extends Controller
         ];
 
         if ($hasPrescriptionItems) {
-            $rules['prescription_image'] = 'required|image|max:5120'; // max 5MB
+            $rules['prescription_image'] = 'required|image|mimes:jpg,jpeg,png,webp|max:5120'; // max 5MB
         }
 
         $validated = $request->validate($rules);
@@ -78,11 +78,11 @@ class CheckoutController extends Controller
                 $this->midtransPaymentService->createSnapTransaction($order);
 
                 return redirect()
-                    ->route('customer.orders.show', ['order' => $order->id, 'pay' => 1])
+                    ->route('customer.orders.show', ['order' => $order->order_number, 'pay' => 1])
                     ->with('success', 'Pesanan dibuat. Silakan lanjutkan pembayaran.');
             }
 
-            return redirect()->route('customer.orders.show', $order->id)->with('success', 'Order created successfully.');
+            return redirect()->route('customer.orders.show', ['order' => $order->order_number])->with('success', 'Order created successfully.');
         } catch (\Exception $e) {
             return back()->withErrors(['message' => $e->getMessage()]);
         }

@@ -18,7 +18,9 @@ class DashboardController extends Controller
         $pendingPrescriptions = Order::where('prescription_status', 'pending')->count();
 
         // 2. Orders to Process
-        $ordersToProcess = Order::whereIn('order_status', ['waiting_payment', 'paid'])->count();
+        $ordersToProcess = Order::where('order_number', 'like', 'ORD-%')
+            ->where('order_status', 'processing')
+            ->count();
 
         // 3. Low Stock Medicines
         $lowStockMedicines = Medicine::select('medicines.id', 'medicines.name', 'medicines.code')

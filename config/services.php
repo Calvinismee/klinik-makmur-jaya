@@ -41,4 +41,8 @@ return [
         'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
     ],
 
+    'notifications' => [
+        'mail_enabled' => env('NOTIFICATION_MAIL_ENABLED', false),
+    ],
+
 ];

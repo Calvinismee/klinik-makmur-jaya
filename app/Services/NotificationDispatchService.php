@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\NotificationCreated;
 use App\Models\User;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
@@ -21,5 +22,9 @@ class NotificationDispatchService
         }
 
         $user->notify($notification);
+
+        if (method_exists($notification, 'toDatabase')) {
+            broadcast(NotificationCreated::fromUser($user, $notification->toDatabase($user)))->toOthers();
+        }
     }
 }

@@ -47,7 +47,7 @@ export default function SuppliersIndex({ suppliers }: { suppliers: any[] }) {
     return (
         <AppLayout title="Kelola Supplier">
             <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-                <h2 className="text-lg font-bold mb-4">{editingId ? 'Edit Supplier' : 'Add New Supplier'}</h2>
+                <h2 className="text-lg font-bold mb-4">{editingId ? 'Edit Supplier' : 'Tambah Supplier'}</h2>
                 <form onSubmit={submit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Nama</label>
@@ -85,7 +85,7 @@ export default function SuppliersIndex({ suppliers }: { suppliers: any[] }) {
                     <thead className="bg-gray-50">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kontak</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Alamat</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
                         </tr>

@@ -19,6 +19,7 @@ class OrdersExport implements FromCollection, WithHeadings, WithMapping
         return [
             'ID',
             'Order Number',
+            'Purchase Type',
             'Customer',
             'Total Amount',
             'Order Status',
@@ -32,11 +33,26 @@ class OrdersExport implements FromCollection, WithHeadings, WithMapping
         return [
             $order->id,
             $order->order_number,
-            $order->user ? $order->user->name : 'N/A',
+            $this->purchaseType($order),
+            $this->customerName($order),
             $order->total_amount,
             $order->order_status,
             $order->payment_status,
             $order->created_at->format('Y-m-d H:i:s'),
         ];
+    }
+
+    private function purchaseType(Order $order): string
+    {
+        return str_starts_with($order->order_number, 'POS-') ? 'Offline' : 'Online';
+    }
+
+    private function customerName(Order $order): string
+    {
+        if (str_starts_with($order->order_number, 'POS-')) {
+            return 'Pelanggan Offline';
+        }
+
+        return $order->user ? $order->user->name : 'N/A';
     }
 }

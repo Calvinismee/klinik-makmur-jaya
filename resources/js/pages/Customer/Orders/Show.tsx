@@ -5,7 +5,7 @@ import AppLayout from '../../../Layouts/AppLayout';
 declare global {
     interface Window {
         snap?: {
-            pay: (token: string, callbacks?: Record<string, () => void>) => void;
+            pay: (token: string, callbacks?: Record<string, (result?: Record<string, unknown>) => void>) => void;
         };
     }
 }
@@ -13,6 +13,9 @@ declare global {
 export default function OrderShow({ order }: { order: any }) {
     const { url } = usePage();
     const [paymentOpened, setPaymentOpened] = useState(false);
+    const [paymentChecking, setPaymentChecking] = useState(false);
+    const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -56,12 +59,28 @@ export default function OrderShow({ order }: { order: any }) {
 
     const canPay = order.order_status === 'waiting_payment' && order.payment_status !== 'paid';
     const hasSnapToken = Boolean(order.midtrans_snap_token);
-    const isWaitingPayment = order.order_status === 'waiting_payment' && order.payment_status !== 'paid';
-    const syncPaymentStatus = () => router.visit(`/customer/orders/${order.id}?sync_payment=1`);
+    const isMidtransPending = order.payment_provider === 'midtrans' && order.payment_status === 'pending';
+    const syncPaymentStatus = (message = 'Sedang memverifikasi pembayaran. Mohon tunggu sebentar.') => {
+        setPaymentError(null);
+        setPaymentNotice(message);
+        setPaymentChecking(true);
+
+        router.visit(`/customer/orders/${order.order_number}?sync_payment=1`, {
+            preserveScroll: true,
+            onFinish: () => setPaymentChecking(false),
+        });
+    };
 
     const openPayment = () => {
+        setPaymentError(null);
+        setPaymentNotice(null);
+
         if (!hasSnapToken) {
-            router.post(`/customer/orders/${order.id}/pay`, {}, { preserveScroll: true });
+            setPaymentChecking(true);
+            router.post(`/customer/orders/${order.order_number}/pay`, {}, {
+                preserveScroll: true,
+                onFinish: () => setPaymentChecking(false),
+            });
             return;
         }
 
@@ -74,10 +93,17 @@ export default function OrderShow({ order }: { order: any }) {
         }
 
         window.snap.pay(order.midtrans_snap_token, {
-            onSuccess: syncPaymentStatus,
-            onPending: syncPaymentStatus,
-            onError: syncPaymentStatus,
-            onClose: syncPaymentStatus,
+            onSuccess: () => syncPaymentStatus('Pembayaran dikirim. Sedang diverifikasi.'),
+            onPending: () => syncPaymentStatus('Pembayaran sedang diproses.'),
+            onError: () => {
+                setPaymentNotice(null);
+                setPaymentChecking(false);
+                setPaymentError('Pembayaran gagal diproses. Status pesanan tidak diubah.');
+            },
+            onClose: () => {
+                setPaymentNotice('Pembayaran dibatalkan. Pesanan tetap menunggu pembayaran.');
+                setPaymentChecking(false);
+            },
         });
     };
 
@@ -125,7 +151,7 @@ export default function OrderShow({ order }: { order: any }) {
                             {order.payment_provider && (
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">Metode Pembayaran</span>
-                                    <span className="font-bold uppercase">{order.payment_method || order.payment_provider}</span>
+                                    <span className="font-bold">{order.payment_method ? order.payment_method.toUpperCase() : 'Online'}</span>
                                 </div>
                             )}
                             {order.prescription_status && (
@@ -134,18 +160,38 @@ export default function OrderShow({ order }: { order: any }) {
                                     <span className="font-bold">{order.prescription_status.toUpperCase()}</span>
                                 </div>
                             )}
-                            {isWaitingPayment && (
-                                <div className="rounded border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
-                                    Pesanan belum diproses sebelum pembayaran berhasil diverifikasi Midtrans.
+                            {(isMidtransPending || paymentNotice) && (
+                                <div className="rounded border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                        <div className="flex items-center gap-2">
+                                            {paymentChecking && <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-300 border-t-blue-700" />}
+                                            <span>{paymentNotice || 'Pembayaran sedang diproses.'}</span>
+                                        </div>
+                                        {isMidtransPending && !paymentChecking && (
+                                            <button
+                                                type="button"
+                                                onClick={() => syncPaymentStatus()}
+                                                className="shrink-0 rounded bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-700"
+                                            >
+                                                Cek Status
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                            {paymentError && (
+                                <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                                    {paymentError}
                                 </div>
                             )}
                             {canPay && (
                                 <button
                                     type="button"
                                     onClick={openPayment}
-                                    className="mt-3 w-full rounded bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
+                                    disabled={paymentChecking}
+                                    className="mt-3 w-full rounded bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                    Bayar Sekarang
+                                    {paymentChecking ? 'Mengecek pembayaran...' : isMidtransPending ? 'Cek / Lanjutkan Pembayaran' : 'Bayar Sekarang'}
                                 </button>
                             )}
                         </div>

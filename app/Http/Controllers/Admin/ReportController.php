@@ -63,9 +63,23 @@ class ReportController extends Controller
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
             $labels[] = $date->format('M d');
-            $salesChartData[] = Order::where('payment_status', 'paid')
-                ->whereDate('created_at', $date)
-                ->sum('total_amount');
+
+            $baseQuery = Order::where('payment_status', 'paid')
+                ->whereDate('created_at', $date);
+
+            $offlineQuery = (clone $baseQuery)->where('order_number', 'like', 'POS-%');
+            $onlineQuery = (clone $baseQuery)->where('order_number', 'not like', 'POS-%');
+
+            $salesChartData[] = [
+                'date' => $date->toDateString(),
+                'label' => $date->format('M d'),
+                'total' => (float) (clone $baseQuery)->sum('total_amount'),
+                'transactions' => (clone $baseQuery)->count(),
+                'offlineTotal' => (float) (clone $offlineQuery)->sum('total_amount'),
+                'offlineTransactions' => (clone $offlineQuery)->count(),
+                'onlineTotal' => (float) (clone $onlineQuery)->sum('total_amount'),
+                'onlineTransactions' => (clone $onlineQuery)->count(),
+            ];
         }
 
         $allMedicinesStock = Medicine::select('medicines.id', 'medicines.name', 'medicines.code')

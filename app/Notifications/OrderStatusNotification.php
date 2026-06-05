@@ -3,24 +3,20 @@
 namespace App\Notifications;
 
 use App\Models\Order;
+use App\Notifications\Concerns\ChoosesNotificationChannels;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class OrderStatusNotification extends Notification
 {
-    use Queueable;
+    use Queueable, ChoosesNotificationChannels;
 
     public function __construct(
         private Order $order,
         private string $statusLabel,
         private string $message
     ) {
-    }
-
-    public function via(object $notifiable): array
-    {
-        return ['database', 'mail'];
     }
 
     public function toDatabase(object $notifiable): array
@@ -33,7 +29,7 @@ class OrderStatusNotification extends Notification
             'severity' => 'info',
             'dedupe_key' => "order_status:{$this->order->id}:{$this->order->order_status}:{$this->order->payment_status}",
             'message' => $this->message,
-            'url' => route('customer.orders.show', $this->order, false),
+            'url' => route('customer.orders.show', ['order' => $this->order->order_number], false),
         ];
     }
 
@@ -42,6 +38,6 @@ class OrderStatusNotification extends Notification
         return (new MailMessage)
             ->subject("Status Pesanan {$this->order->order_number}: {$this->statusLabel}")
             ->line($this->message)
-            ->action('Lihat Pesanan', url(route('customer.orders.show', $this->order, false)));
+            ->action('Lihat Pesanan', url(route('customer.orders.show', ['order' => $this->order->order_number], false)));
     }
 }

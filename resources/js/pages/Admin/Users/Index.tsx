@@ -10,6 +10,32 @@ export default function UsersIndex({ users, roles }: { users: any[], roles: any[
         password: '',
         role: '',
     });
+    const passwordRules = [
+        {
+            label: 'Minimal 8 karakter',
+            passed: data.password.length >= 8,
+        },
+        {
+            label: 'Mengandung huruf besar dan kecil',
+            passed: /[a-z]/.test(data.password) && /[A-Z]/.test(data.password),
+        },
+        {
+            label: 'Mengandung angka',
+            passed: /\d/.test(data.password),
+        },
+        {
+            label: 'Mengandung simbol',
+            passed: /[^A-Za-z0-9]/.test(data.password),
+        },
+    ];
+    const passwordStarted = data.password.length > 0;
+    const passwordIsStrong = passwordRules.every((rule) => rule.passed);
+    const passwordInputClass = passwordStarted
+        ? passwordIsStrong
+            ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
+            : 'border-red-300 focus:border-red-500 focus:ring-red-500'
+        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500';
+    const canSubmit = !processing && (editingId ? !passwordStarted || passwordIsStrong : passwordIsStrong);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -46,7 +72,7 @@ export default function UsersIndex({ users, roles }: { users: any[], roles: any[
     return (
         <AppLayout title="Kelola Pengguna">
             <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-                <h2 className="text-lg font-bold mb-4">{editingId ? 'Edit Pengguna' : 'Add New Pengguna'}</h2>
+                <h2 className="text-lg font-bold mb-4">{editingId ? 'Edit Pengguna' : 'Tambah Pengguna'}</h2>
                 <form onSubmit={submit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Nama</label>
@@ -59,21 +85,33 @@ export default function UsersIndex({ users, roles }: { users: any[], roles: any[
                         {errors.email && <div className="text-red-500 text-sm">{errors.email}</div>}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Password {editingId && '(Leave empty to keep current)'}</label>
-                        <input type="password" className="mt-1 block w-full rounded-md border p-2" value={data.password} onChange={e => setData('password', e.target.value)} required={!editingId} />
+                        <label className="block text-sm font-medium text-gray-700">Password {editingId && '(Biarkan kosong jika tidak diubah)'}</label>
+                        <input type="password" className={`mt-1 block w-full rounded-md border p-2 ${passwordInputClass}`} value={data.password} onChange={e => setData('password', e.target.value)} required={!editingId} />
                         {errors.password && <div className="text-red-500 text-sm">{errors.password}</div>}
+                        {passwordStarted && (
+                            <div className="mt-2 space-y-1">
+                                {passwordRules.map((rule) => (
+                                    <div key={rule.label} className={`flex items-center gap-2 text-xs ${rule.passed ? 'text-green-600' : 'text-red-500'}`}>
+                                        <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${rule.passed ? 'bg-green-100' : 'bg-red-100'}`}>
+                                            {rule.passed ? 'OK' : '!'}
+                                        </span>
+                                        <span>{rule.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Peran</label>
                         <select className="mt-1 block w-full rounded-md border p-2" value={data.role} onChange={e => setData('role', e.target.value)} required>
-                            <option value="">Select Peran</option>
+                            <option value="">Pilih Peran</option>
                             {roles.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
                         </select>
                         {errors.role && <div className="text-red-500 text-sm">{errors.role}</div>}
                     </div>
                     
                     <div className="md:col-span-2 flex gap-2">
-                        <button type="submit" disabled={processing} className="bg-blue-600 text-white px-4 py-2 rounded">
+                        <button type="submit" disabled={!canSubmit} className="bg-blue-600 text-white px-4 py-2 rounded disabled:cursor-not-allowed disabled:opacity-50">
                             {editingId ? 'Update' : 'Simpan'}
                         </button>
                         {editingId && (

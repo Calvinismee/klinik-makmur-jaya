@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\CheckCriticalStockJob;
 use App\Models\Medicine;
 use App\Models\MedicineBatch;
 use App\Models\StockMovement;
@@ -15,7 +16,7 @@ class StockService
      */
     public function addBatch(array $data, int $userId = null)
     {
-        return DB::transaction(function () use ($data, $userId) {
+        $batch = DB::transaction(function () use ($data, $userId) {
             $batch = MedicineBatch::create([
                 'medicine_id' => $data['medicine_id'],
                 'batch_number' => $data['batch_number'],
@@ -38,6 +39,10 @@ class StockService
 
             return $batch;
         });
+
+        CheckCriticalStockJob::dispatch();
+
+        return $batch;
     }
 
     /**
@@ -45,7 +50,7 @@ class StockService
      */
     public function deductStock(int $medicineId, int $quantityToDeduct, string $referenceType, int $referenceId, string $notes = '', int $userId = null)
     {
-        return DB::transaction(function () use ($medicineId, $quantityToDeduct, $referenceType, $referenceId, $notes, $userId) {
+        $result = DB::transaction(function () use ($medicineId, $quantityToDeduct, $referenceType, $referenceId, $notes, $userId) {
             $remainingToDeduct = $quantityToDeduct;
 
             // Get batches ordered by expiration date (FIFO) that have remaining stock
@@ -87,6 +92,10 @@ class StockService
 
             return true;
         });
+
+        CheckCriticalStockJob::dispatch();
+
+        return $result;
     }
 
     /**

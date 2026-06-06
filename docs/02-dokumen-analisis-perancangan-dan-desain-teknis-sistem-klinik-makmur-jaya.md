@@ -228,11 +228,9 @@ MySQL Database + File Storage + Backup
 |---|---|
 | `laravel/framework` | Framework utama aplikasi |
 | `spatie/laravel-permission` | Role dan permission |
-| `spatie/laravel-activitylog` | Audit aktivitas penting |
 | `barryvdh/laravel-dompdf` | Export PDF |
 | `maatwebsite/excel` | Import/export Excel/CSV |
 | `laravel/reverb` | Broadcasting realtime |
-| `laravel/telescope` | Monitoring lokal request, query, job, log |
 
 ## 5.3 Library Frontend
 
@@ -242,9 +240,8 @@ MySQL Database + File Storage + Backup
 | `react`, `react-dom` | Komponen antarmuka |
 | `vite` | Build asset |
 | `tailwindcss` | Styling UI |
-| `chart.js` / `react-chartjs-2` | Grafik dashboard |
-| `lucide-react` | Ikon UI |
-| `axios` | Request utilitas/polling |
+| `laravel-echo` | Koneksi notifikasi waktu nyata dari frontend |
+| `pusher-js` | Client websocket untuk Laravel Echo/Reverb |
 
 ---
 
